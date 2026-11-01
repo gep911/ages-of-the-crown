@@ -112,6 +112,33 @@ p{margin:0;line-height:1.5;max-width:65ch;color:#d8c8ad}
 .cmdchip{padding:4px 9px;font-size:11px;border-color:color-mix(in srgb,var(--cc) 45%,transparent);display:inline-flex;gap:5px;align-items:center}.cmdchip b{color:var(--cc)}.cmdchip.act{background:color-mix(in srgb,var(--cc) 22%,transparent);border-color:var(--cc);box-shadow:0 0 0 1px var(--cc) inset}.cmdchips{gap:6px}#t-cmd .cmdchips{flex-wrap:nowrap}
 @media (max-width:640px){.bar{width:90px}#topbar{font-size:11px;gap:8px}#abil{bottom:max(96px,calc(env(safe-area-inset-bottom,0px) + 96px))}.ab{width:104px;font-size:10px}#selpanel{bottom:max(96px,calc(env(safe-area-inset-bottom,0px) + 96px));width:min(230px,calc(100% - 140px))}#selpanel .panel{max-height:46vh;overflow-y:auto}}
 @media (prefers-reduced-motion:reduce){#banner{transition:none}}
+/* War Council talent trees */
+#modal > .panel.m-wide{width:min(1500px,100%)}
+#modal > .panel.m-small{width:min(480px,100%);margin:auto}
+.trees{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}
+.tree{flex:1 1 360px;border:1px solid color-mix(in srgb,var(--tc) 45%,transparent);border-radius:6px;padding:10px;background:linear-gradient(180deg,color-mix(in srgb,var(--tc) 10%,transparent),transparent 120px);display:flex;flex-direction:column;gap:6px;min-width:0}
+.tree:last-child{flex:2 1 560px}
+.tree-h{display:flex;align-items:center;gap:10px;padding-bottom:6px;border-bottom:1px solid color-mix(in srgb,var(--tc) 35%,transparent)}
+.tree-h canvas{width:48px;height:48px;flex:none}.tree-h h3{color:var(--tc);margin:0}.tree-pts{margin-left:auto;color:var(--tc);font-weight:700}
+.trow{display:flex;gap:8px;align-items:stretch;padding:4px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
+.trow.locked{opacity:.55}
+.tera{flex:none;width:58px;font-family:var(--f-head,Cinzel,serif);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gilt-dim,#9a7a3a);padding-top:14px;text-align:center}
+.tnodes{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0;align-items:flex-start}
+.tal{position:relative;width:82px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 3px 5px;border:1px solid rgba(255,255,255,.12);border-radius:6px;background:rgba(0,0,0,.25);cursor:pointer;text-transform:none;letter-spacing:0;font-family:var(--f-body,inherit)}
+.tal canvas{width:44px;height:44px;border-radius:5px;display:block}
+.tal-rk{position:absolute;top:38px;right:12px;font-size:10px;font-weight:700;background:#0c0907;border:1px solid var(--gilt-dim,#7a6030);border-radius:3px;padding:0 3px;color:#ead9bc}
+.tal-req{position:absolute;top:3px;left:6px;font-size:9px;color:var(--gilt)}
+.tal-nm{font-size:10.5px;line-height:1.15;text-align:center;color:#ead9bc;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.3em}
+.tal-c{font-size:10px;color:var(--gilt)}
+.tal.own{border-color:color-mix(in srgb,var(--tc) 70%,transparent)}
+.tal.max{border-color:var(--gilt);background:rgba(209,165,76,.12)}.tal.max .tal-c{color:#8fe08f}
+.tal.lock canvas,.tal.poor canvas{filter:grayscale(.85) brightness(.7)}.tal.lock .tal-nm,.tal.poor .tal-nm{opacity:.65}.tal.poor .tal-c{color:#e36a6a}
+.tal:hover{border-color:var(--gilt)}
+/* pulsing glow: something to spend here */
+@keyframes nudge{0%,100%{box-shadow:0 0 0 1px rgba(209,165,76,.35),0 0 3px rgba(209,165,76,.15)}50%{box-shadow:0 0 0 2px rgba(255,214,130,.95),0 0 16px rgba(255,190,90,.8)}}
+.nudge{animation:nudge 1.5s ease-in-out infinite}
+button.nudge{border-color:var(--gilt)!important;color:#ffe9a8}
+@media (prefers-reduced-motion:reduce){.nudge{animation:none;box-shadow:0 0 0 2px rgba(255,214,130,.9)}}
 </style>
 <div id="app">
   <canvas id="cv"></canvas>
@@ -136,7 +163,13 @@ p{margin:0;line-height:1.5;max-width:65ch;color:#d8c8ad}
    into players[0]. A network layer can later fill other players'
    structs from remote commands and sync world snapshots.
    ============================================================ */
-const W = 3200, H = 2000, CX = 1600, CY = 1000, CORE_R = 112, BUILD_R = 470, TAU = Math.PI * 2;
+// SZ: how much larger every model is drawn (and how much room it takes) than in the first versions.
+// HS: the hive city's scale (a little larger still, so the spire dominates the field).
+const SZ = 1.35, HS = 1.5;
+const W = 3200, H = 2000, CX = 1600, CY = 1000, CORE_R = Math.round(112 * HS), BUILD_R = 470, TAU = Math.PI * 2;
+// hive-local coordinates (as drawn in render.js drawHive) to world: the hive's footprint is centred on the build circle
+const HIVE_BASE = 50;
+const hiveX = hx => CX + hx * HS, hiveY = hy => CY + (hy - HIVE_BASE) * HS;
 
 const ERAS = [
   { name: "Age of Iron",   foe: "The Flayed Tribes", tint: "#8fbf4f", ground: "#1c1713" },
@@ -672,6 +705,29 @@ const PROPS = {
   statue:  { name: "Saint's statue",   r: 15, hp: 520, scrap: 8 },
   crates:  { name: "Supply crates",    r: 13, hp: 150, scrap: 10 },
 };
+
+// bigger models: collision radii grow with the drawings (ranges and speeds stay as they were)
+for (const k in TOWERS) TOWERS[k].r = Math.round(TOWERS[k].r * SZ);
+for (const k in ENEMIES) ENEMIES[k].r = ENEMIES[k].r * SZ;
+for (const k in UNITS) if (!UNITS[k].titan && !UNITS[k].ship) UNITS[k].r = UNITS[k].r * SZ;
+for (const k in PROPS) PROPS[k].r = Math.round(PROPS[k].r * SZ);
+BOSSES.forEach(b => { if (b.r) b.r = b.r * SZ; });
+
+/* ---------------- War Council trees ---------------- */
+const RES_TREES = [
+  { id: "eco", name: "Adeptus Administratum", sub: "Tithes, salvage and the Imperium's ledgers", col: "#d1a54c" },
+  { id: "war", name: "Forges of Mars", sub: "Weapons, war engines and the arts of destruction", col: "#d0553c" },
+];
+const resTree = r => r.eco ? "eco" : "war";
+// icon for research that isn't tied to a tower (towers and refits use the tower's own picture)
+const RES_SYM = {
+  r_start: "crate", r_tithe1: "ledger", r_tithe2: "ledger", r_alms: "coin", r_drill: "gear", r_bounty: "skullcoin", r_veins: "ore",
+  r_cheap: "hammer", r_scrap: "gear", r_upg: "hammer", r_rf_eco: "ledger", r_market: "coin",
+  r_dmg1: "shell", r_dmg2: "shell", r_dmg3: "shell", r_hp1: "shield", r_fire: "flame", r_hull1: "keep", r_hull2: "keep", r_repair: "gear",
+  r_core1: "gun", r_core2: "gun", r_choice: "eye", r_reroll: "eye", r_last: "skull", r_orbital: "beam", r_cyclonic: "beam",
+  r_choir: "skull", r_adamant: "shield", r_sacred: "flame",
+};
+const RES_TOWER_ICON = { r_relic_t: "titanforge", r_fleet: "voidyard" };
 /* ============================================================
    Persistence, run state, and battle simulation
    ============================================================ */
@@ -926,6 +982,8 @@ function startBattle(col, idx) {
   for (const o of RUN.deposits) B.deposits.push({ x: o.x, y: o.y, used: null });
   if (node.mod === "rich") for (let i = 0; i < 2; i++) { const o = freeSpot(); B.deposits.push({ x: o.x, y: o.y, used: null, temp: true }); }
   // obstacles: roads, ruins, trees and wrecks. They persist (with their damage) until the age changes.
+  if (RUN.props && RUN.sz !== SZ) { RUN.props.forEach(p => { p.r = Math.round(p.r * SZ / (RUN.sz || 1)); }); }
+  RUN.sz = SZ;
   if (!RUN.props || RUN.propEra !== era) genProps(era);
   B.props = RUN.props.map(p => Object.assign({}, p, { flash: 0 }));
   B.roads = RUN.roads;
@@ -1156,7 +1214,7 @@ function refreshTowerHP(t) {
 /* ---------------- Hex build grid ----------------
    Pointy-top hexagons, squashed vertically to match the three-quarter view. Every building
    except ore-vein buildings snaps to a hex centre; one building per hex. */
-const HEX_R = 26, HEX_SX = Math.sqrt(3) * HEX_R, HEX_SY = 1.5 * HEX_R * 0.82;
+const HEX_R = Math.round(26 * SZ), HEX_SX = Math.sqrt(3) * HEX_R, HEX_SY = 1.5 * HEX_R * 0.82;
 function hexRound(q, r) { let x = q, z = r, y = -x - z, rx = Math.round(x), ry = Math.round(y), rz = Math.round(z); const dx = Math.abs(rx - x), dy = Math.abs(ry - y), dz = Math.abs(rz - z); if (dx > dy && dx > dz) rx = -ry - rz; else if (dy <= dz) rz = -rx - ry; return [rx, rz]; }
 function hexSnap(x, y) { const r = (y - CY) / HEX_SY, q = (x - CX) / HEX_SX - r / 2; const [hq, hr] = hexRound(q, r); return { x: CX + HEX_SX * (hq + hr / 2), y: CY + HEX_SY * hr, q: hq, r: hr }; }
 const HEX_CELLS = (() => { const out = []; for (let r = -20; r <= 20; r++) for (let q = -20; q <= 20; q++) { const x = CX + HEX_SX * (q + r / 2), y = CY + HEX_SY * r, d = dist(x, y, CX, CY); if (d <= BUILD_R - 8 && d >= CORE_R + 22) out.push({ x, y, q, r }); } return out; })();
@@ -1168,7 +1226,7 @@ function canPlace(k, x, y) {
   const dc = dist(x, y, CX, CY);
   if (dc > BUILD_R) return "Outside the build radius";
   if (dc < CORE_R + d.r + 6) return "Too close to the citadel";
-  for (const t of B.towers) if (dist(x, y, t.x, t.y) < (k === "barricade" && t.type === "barricade" ? 30 : t.r + d.r + 3)) return "Blocked by a structure";
+  for (const t of B.towers) if (dist(x, y, t.x, t.y) < (k === "barricade" && t.type === "barricade" ? Math.round(30 * SZ) : t.r + d.r + 3)) return "Blocked by a structure";
   if (propAt(x, y, d.r + 3)) return "Blocked by an obstacle. Shoot it down first";
   const dep = B.deposits.find(o => dist(x, y, o.x, o.y) < 26);
   if (d.vein) { if (!dep) return "Must be placed on an ore vein"; if (dep.used) return "Vein already tapped"; }
@@ -1818,13 +1876,14 @@ function updatePlayer(p, dt) {
   if (p.recoil > 0) p.recoil = Math.max(0, p.recoil - dt * 6);
 }
 
-const SHX = CX, SHY = CY + 22, CORE_RANGE = 720;
+// the gun pivot sits on the hive's first terrace (hive-local y 22), scaled with the hive
+const SHX = CX, SHY = hiveY(52) - 30, CORE_RANGE = 720; // turret ring (drawn at SHY + 30) sits at hive-local y 52
 // gun mounts on the hive terrace: one central gun solo, a row of smaller guns in co-op
 const GUN_MOUNTS = { 1: [[0, 0]], 2: [[-74, 0], [74, 0]], 3: [[-102, -6], [0, 6], [102, -6]], 4: [[-114, -14], [-40, 6], [40, 6], [114, -14]] };
 const GUN_SCALE = { 1: 1.5, 2: 1.25, 3: 1.1, 4: 0.98 };
 function mkPlayer(i, core, n) {
   const m = GUN_MOUNTS[n][i];
-  return { id: i, core, sx: SHX + m[0], sy: SHY + m[1], gs: GUN_SCALE[n], aimX: CX + 200, aimY: CY, firing: false, special: false, ability: false, cd: 0, spCd: 0, qCd: 0, heat: 0, over: 0, beams: [], choir: 0, choirT: 0 };
+  return { id: i, core, sx: SHX + m[0] * HS, sy: SHY + m[1] * HS, gs: GUN_SCALE[n] * HS, aimX: CX + 200, aimY: CY, firing: false, special: false, ability: false, cd: 0, spCd: 0, qCd: 0, heat: 0, over: 0, beams: [], choir: 0, choirT: 0 };
 }
 function coreMuzzle(ang, p) {
   // barrel tips of the citadel gun (turret ring drawn in render.js drawCitadelGun, scaled p.gs around (sx, sy + 30))
@@ -2206,7 +2265,7 @@ function unitAttack(u, e, U, dmg) {
 const range2life = (r, sp) => r / sp + 0.15;
 
 /* ---------------- Walls: neighbouring barricades link into a continuous wall ---------------- */
-const WALL_LINK = 50; // only neighbouring hexes join up
+const WALL_LINK = Math.round(50 * SZ); // only neighbouring hexes join up
 function rebuildLinks() {
   const bars = B.towers.filter(t => t.type === "barricade"), walls = [], deg = new Map();
   const pairs = [];
@@ -2849,8 +2908,8 @@ function lighting(g, time) {
   const L = (x, y, r, a, col) => lights.push([x, y, r, a, col]);
   // fortress and its torches
   L(CX, CY - 10, 300, 0.85, "255,190,110");
-  for (const [tx, ty] of FORT_TORCHES) L(CX + tx, CY + ty, 90 + Math.sin(time * 9 + tx) * 6, 0.8, "255,150,60");
-  L(CX, CY + HIVE.tiers[2].top - 120, 140, 0.5, "255,200,120");
+  for (const [tx, ty] of FORT_TORCHES) L(hiveX(tx), hiveY(ty), (90 + Math.sin(time * 9 + tx) * 6) * HS, 0.8 * (B.hiveA == null ? 1 : B.hiveA), "255,150,60");
+  L(CX, hiveY(HIVE.tiers[2].top - 160), 170 * HS, 0.5, "255,200,120");
   for (const o of B.deposits) L(o.x, o.y, 55, 0.45, "230,180,80");
   for (const p of B.portals) if (p.on) L(clamp(p.x, 20, W - 20), clamp(p.y, 20, H - 20), 210, 0.75, "255,50,40");
   for (const t of B.towers) {
@@ -3630,7 +3689,7 @@ function drawUnit(g, u) {
   g.drawImage(sp.c, u.x - sp.ax, u.y - sp.ay, sp.bw, sp.bh);
 }
 // Linked barricades become one continuous curtain wall: posts at each barricade, wall bands between them
-const WALL_H = 26, WALL_T = 8;
+const WALL_H = Math.round(26 * SZ), WALL_T = Math.round(8 * SZ);
 function wallCols(t) {
   const lvl = t ? t.level : 1, br = t && t.level >= 3 ? t.branch : -1;
   return { face: br === 0 ? "#6e6458" : "#625a50", top: br === 0 ? "#8a8070" : "#7a7062", dark: "#3a332d", trim: lvl >= 2 ? BRASS : "#4a443e", glow: br === 2 ? "120,240,200" : "160,220,255", spikes: br === 1 || (t && t.ups && t.ups.thorns) };
@@ -3827,7 +3886,7 @@ const CAT_COL = { weapons: "200,80,60", support: "80,150,210", eco: "209,165,76"
 function drawPads(g, time) {
   for (const t of B.towers) {
     const d = TOWERS[t.type]; if (d.vein || (t.type === "barricade" && t.linked)) continue;
-    const R = HEX_R - 1.5 + (t.r > 24 ? 10 : 0), col = CAT_COL[d.tab] || "200,190,170";
+    const R = HEX_R - 1.5 + (t.r > 24 * SZ ? 10 * SZ : 0), col = CAT_COL[d.tab] || "200,190,170";
     hexPath(g, t.x, t.y + 2, R); g.fillStyle = "rgba(24,20,17,.85)"; g.fill();
     hexPath(g, t.x, t.y + 2, R - 4); g.fillStyle = "rgba(" + col + ",.16)"; g.fill();
     hexPath(g, t.x, t.y + 2, R); g.strokeStyle = "rgba(" + col + ",.85)"; g.lineWidth = 2; g.stroke();
@@ -3850,7 +3909,7 @@ const ANIMATED = { arc: 1, plasma: 1, brazier: 1, tarpit: 1, reliquary: 1, stasi
 function drawTowerCached(g, t, sc, time) {
   const dsc = sprScale(), ab = Math.round((((t.ang % TAU) + TAU) % TAU) / TAU * 48) % 48;
   const key = t.level + "|" + t.branch + "|" + ab + "|" + (t.mf > 0 ? 1 : 0) + "|" + sc.toFixed(2) + "|" + dsc + "|" + (t.beamT.length ? 1 : 0) + "|" + ((t.ups && t.ups.thorns) || 0) + "|" + Math.min(9, Math.floor((t.bones || 0) / 2)) + "|" + (ANIMATED[t.type] ? Math.floor(time * QUAL.animFps) : 0);
-  const bw = 150, bh = 165, ax = 75, ay = 125;
+  const bw = 150 * SZ, bh = 165 * SZ, ax = 75 * SZ, ay = 125 * SZ;
   let s = t._spr;
   if (!s || s.dsc !== dsc) { const c = document.createElement("canvas"); c.width = Math.ceil(bw * dsc); c.height = Math.ceil(bh * dsc); s = t._spr = { c, g: c.getContext("2d"), dsc, key: "" }; }
   if (s.key !== key) {
@@ -4334,14 +4393,14 @@ function render() {
   for (const t of B.towers) items.push([t.y + t.r * 0.6, 0, t]);
   for (const e of B.enemies) items.push([e.y + e.r, 1, e]);
   for (const p of B.props) items.push([p.y, 3, p]);
-  items.push([CY + 90, 2, null]);
+  items.push([hiveY(110), 2, null]);
   for (const u of B.units) if (!u.dead) items.push([u.y, 5, u]);
   for (const w of B.walls) items.push([(w[0].y + w[1].y) / 2 - 1, 4, w]);
   items.sort((a, b) => a[0] - b[0]);
   for (const [, kind, o] of items) {
     if (kind === 0) {
-      const t = o, sc = (0.6 + 0.4 * t.built) * 1.5;
-      if (t.type === "barricade" && t.linked) { if (!t.wallMid) drawWallPost(g, t); else if (t.flash > 0) { g.fillStyle = "rgba(255,80,80,.3)"; g.fillRect(t.x - 12, t.y - WALL_H, 24, WALL_H); } }
+      const t = o, sc = (0.6 + 0.4 * t.built) * 1.5 * SZ;
+      if (t.type === "barricade" && t.linked) { if (!t.wallMid) drawWallPost(g, t); else if (t.flash > 0) { g.fillStyle = "rgba(255,80,80,.3)"; g.fillRect(t.x - 12 * SZ, t.y - WALL_H, 24 * SZ, WALL_H); } }
       else drawTowerCached(g, t, sc, time);
       if (t.flash > 0) { g.fillStyle = "rgba(255,80,80,.4)"; g.beginPath(); g.arc(t.x, t.y, t.r * 1.2, 0, 7); g.fill(); }
     } else if (kind === 1) {
@@ -4350,7 +4409,7 @@ function render() {
       if (e.tarT > 0) { g.fillStyle = "rgba(20,12,6,.6)"; g.beginPath(); g.ellipse(e.x, e.y + e.r * 1.05, e.r * 1.1, e.r * 0.4, 0, 0, 7); g.fill(); }
     } else if (kind === 3) drawProp(g, o);
     else if (kind === 4) drawWall(g, o[0], o[1]);
-    else if (kind === 5) drawUnit(g, o);
+    else if (kind === 5) { if (o.titan || o.ship) drawUnit(g, o); else { g.save(); g.translate(o.x, o.y); g.scale(SZ, SZ); g.translate(-o.x, -o.y); drawUnit(g, o); g.restore(); } }
     else drawCore(g, time);
   }
 
@@ -4376,7 +4435,8 @@ function render() {
 
   // ===== emissive layer: everything that glows sits above the darkness =====
   // pad rims stay readable at night
-  for (const t of B.towers) { const d = TOWERS[t.type]; if (d.vein || (t.type === "barricade" && t.linked)) continue; hexPath(g, t.x, t.y + 2, HEX_R - 1.5 + (t.r > 24 ? 10 : 0)); g.strokeStyle = "rgba(" + (CAT_COL[d.tab] || "200,190,170") + ",.7)"; g.lineWidth = 2; g.stroke(); }
+  const hiveA = B.hiveA == null ? 1 : B.hiveA, behindHive = t => t.y < hiveY(110) && t.y > hiveY(HIVE_TOP) && Math.abs(t.x - CX) < (t.y < hiveY(-40) ? 60 : 200) * HS;
+  for (const t of B.towers) { const d = TOWERS[t.type]; if (d.vein || (t.type === "barricade" && t.linked) || (hiveA > 0.6 && behindHive(t))) continue; hexPath(g, t.x, t.y + 2, HEX_R - 1.5 + (t.r > 24 * SZ ? 10 * SZ : 0)); g.strokeStyle = "rgba(" + (CAT_COL[d.tab] || "200,190,170") + ",.7)"; g.lineWidth = 2; g.stroke(); }
   g.globalCompositeOperation = "lighter";
   for (const e of B.enemies) if (e._ex != null && e.type !== "swarm") { const r = e.type === "boss" ? 7 : e.type === "brute" ? 4 : 3; g.fillStyle = e.type === "boss" ? "rgba(255,210,90,.55)" : "rgba(255,60,40,.5)"; g.beginPath(); g.arc(e._ex, e._ey, r, 0, 7); g.fill(); }
   for (const t of B.towers) {
@@ -4503,7 +4563,7 @@ function render() {
   for (const q of B.quotes || []) {
     q.t += rdt; if (q.t >= q.T) continue;
     const core = q.by === "core"; if (!core && (q.by.unit ? q.by.dead : !B.towers.includes(q.by))) { q.t = q.T; continue; }
-    const x = core ? CX + 40 : q.by.x, y = (core ? CY - 190 : q.by.unit ? q.by.y - q.by.alt - (UNITS[q.by.type].h || 44) - 10 : q.by.y - 66) - Math.min(1, q.t * 6) * 6;
+    const x = core ? CX + 40 * HS : q.by.x, y = (core ? hiveY(-250) : q.by.unit ? q.by.y - q.by.alt - (UNITS[q.by.type].h || 44) - 10 : q.by.y - 66) - Math.min(1, q.t * 6) * 6;
     const a = q.t < 0.12 ? q.t / 0.12 : q.t > q.T - 0.3 ? (q.T - q.t) / 0.3 : 1;
     const zf = 1 / Math.pow(CAM.z, 0.75);
     g.font = "700 " + ((core ? 15 : 12) * zf).toFixed(1) + "px Cinzel, Georgia, serif"; g.textAlign = "center";
@@ -4572,8 +4632,10 @@ const HIVE = (() => {
   tiers[0].v.forEach((p, i) => spires.push({ x: p[0] * 0.92, y: p[1] - tiers[0].h, h: 34 + R() * 16, w: 8, tier: 0 }));
   tiers[1].v.forEach((p, i) => spires.push({ x: p[0] * 0.9, y: p[1] - tiers[1].h, h: i % 2 ? 50 + R() * 14 : 70 + R() * 24, w: i % 2 ? 9 : 12, tier: 1 }));
   tiers[2].v.forEach((p, i) => { if (i % 2) spires.push({ x: p[0] * 0.85, y: p[1] - tiers[2].h, h: 80 + R() * 30, w: 12, tier: 2 }); });
-  spires.push({ x: 0, y: tiers[2].top - 4, h: 175, w: 22, tier: 2, main: true });
-  for (const k of [-1, 1]) spires.push({ x: k * 34, y: tiers[2].top + 6, h: 110, w: 14, tier: 2 });
+  // the great spire: a tall central needle flanked by lesser spires, rising well above the hive
+  for (const k of [-1, 1]) spires.push({ x: k * 40, y: tiers[2].top + 8, h: 165, w: 16, tier: 2 });
+  for (const k of [-1, 1]) spires.push({ x: k * 22, y: tiers[2].top + 2, h: 215, w: 18, tier: 2 });
+  spires.push({ x: 0, y: tiers[2].top - 4, h: 300, w: 28, tier: 2, main: true });
   return { tiers, wins, spires };
 })();
 const FORT_TORCHES = HIVE.tiers[0].v.filter((p, i) => i % 2 === 0).map(p => [p[0] * 0.92, p[1] - HIVE.tiers[0].h - 12]);
@@ -4619,7 +4681,8 @@ function hiveTier(g, t, ti, time) {
 }
 function drawHive(g, time, front) {
   const core = B.core, T0 = HIVE.tiers[0];
-  g.save(); g.translate(CX, CY);
+  g.save(); g.translate(CX, CY - HIVE_BASE * HS); g.scale(HS, HS); // footprint centred on the build circle
+  g.globalAlpha = B.hiveA == null ? 1 : B.hiveA;
   if (!front) {
     g.fillStyle = "rgba(0,0,0,.45)"; g.beginPath(); g.ellipse(10, T0.base + 10, T0.rw + 26, T0.rw * 0.62, 0, 0, 7); g.fill();
     if (core.inv > 0) { g.fillStyle = "rgba(255,233,168," + (0.16 + 0.08 * Math.sin(time * 10)) + ")"; g.beginPath(); g.ellipse(0, T0.top, T0.rw + 30, T0.rw * 0.8, 0, 0, 7); g.fill(); }
@@ -4645,8 +4708,14 @@ function drawHive(g, time, front) {
   g.restore();
 }
 
+// the hive fades while the pointer is over it, so towers and enemies behind the spire stay visible
+const HIVE_TOP = -470;
+// the spire and upper tiers (not the gun terrace in front), and only once the pointer has moved over the field
+function hiveHovered() { const m = mouseW; if (!m || !UI.pointerSeen) return false; const dx = Math.abs(m.x - CX), top = hiveY(HIVE_TOP); if (m.y < top || m.y > hiveY(30)) return false; return dx < (m.y < hiveY(-160) ? 40 : 105) * HS; }
 function drawCore(g, time) {
   const core = B.core;
+  const want = hiveHovered() ? 0.22 : 1, cur = B.hiveA == null ? 1 : B.hiveA;
+  B.hiveA = cur + (want - cur) * 0.18; if (Math.abs(B.hiveA - want) < 0.01) B.hiveA = want;
   drawHive(g, time, false);
   const guns = B.players.slice().sort((a, b) => a.sy - b.sy);
   for (const p of guns) drawCitadelGun(g, time, p);
@@ -4673,6 +4742,44 @@ function menuBG(era) {
     MENU_BG[era] = c.toDataURL("image/jpeg", 0.72);
   } catch (e) { MENU_BG[era] = ""; }
   return MENU_BG[era];
+}
+
+/* ---------- War Council icons ---------- */
+function drawResIcon(c, r) {
+  const g = c.getContext("2d"), eco = resTree(r) === "eco";
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, c.width, c.height); g.setTransform(c.width / 44, 0, 0, c.width / 44, 0, 0);
+  const grd = g.createRadialGradient(22, 18, 2, 22, 22, 28); grd.addColorStop(0, eco ? "#4a3a22" : "#4a2620"); grd.addColorStop(1, "#110c09");
+  g.fillStyle = grd; g.beginPath(); g.moveTo(5, 1); g.lineTo(39, 1); g.quadraticCurveTo(43, 1, 43, 5); g.lineTo(43, 39); g.quadraticCurveTo(43, 43, 39, 43); g.lineTo(5, 43); g.quadraticCurveTo(1, 43, 1, 39); g.lineTo(1, 5); g.quadraticCurveTo(1, 1, 5, 1); g.fill();
+  const tw = r.tower || r.refit || RES_TOWER_ICON[r.id];
+  if (tw) {
+    try { drawTowerGlyph(g, tw, 22, 36, tw === "titanforge" || tw === "voidyard" || tw === "monastery" || tw === "forge" ? 0.62 : 0.85, 0, null); } catch (e) {}
+    if (r.refit || RES_TOWER_ICON[r.id]) { g.fillStyle = "#1a120c"; g.beginPath(); g.arc(36, 8, 6, 0, TAU); g.fill(); g.strokeStyle = "#ffd27a"; g.lineWidth = 2; g.beginPath(); g.moveTo(32.5, 8); g.lineTo(39.5, 8); g.moveTo(36, 4.5); g.lineTo(36, 11.5); g.stroke(); }
+  } else drawResSym(g, RES_SYM[r.id] || (eco ? "coin" : "shell"));
+}
+function drawResSym(g, k) {
+  const GOLD = "#d1a54c", GL = "#ffe1a0", DK = "#2a1d12";
+  g.lineJoin = "round"; g.lineCap = "round";
+  const coin = (x, y, rr) => { g.fillStyle = "#8a6420"; g.beginPath(); g.arc(x, y + 1.5, rr, 0, TAU); g.fill(); g.fillStyle = GOLD; g.beginPath(); g.arc(x, y, rr, 0, TAU); g.fill(); g.strokeStyle = GL; g.lineWidth = 1; g.beginPath(); g.arc(x, y, rr - 2.5, 0, TAU); g.stroke(); };
+  const skull = (x, y, s) => { g.fillStyle = "#e8dcc4"; g.beginPath(); g.arc(x, y - s * 0.15, s, Math.PI * 0.9, Math.PI * 2.1); g.lineTo(x + s * 0.6, y + s * 0.75); g.lineTo(x - s * 0.6, y + s * 0.75); g.closePath(); g.fill(); g.fillStyle = DK; g.beginPath(); g.arc(x - s * 0.38, y, s * 0.26, 0, TAU); g.arc(x + s * 0.38, y, s * 0.26, 0, TAU); g.fill(); g.fillRect(x - s * 0.08, y + s * 0.3, s * 0.16, s * 0.25); };
+  if (k === "coin" || k === "skullcoin") { coin(17, 25, 9); coin(25, 19, 10); if (k === "skullcoin") skull(25, 19, 5); else { g.strokeStyle = DK; g.lineWidth = 2; g.beginPath(); g.moveTo(25, 13); g.lineTo(25, 25); g.moveTo(20, 16); g.lineTo(30, 16); g.stroke(); } }
+  else if (k === "ledger") { g.fillStyle = "#5a1a14"; g.fillRect(9, 10, 24, 26); g.fillStyle = "#e8dcc4"; g.fillRect(12, 12, 21, 22); g.strokeStyle = "#8a7a60"; g.lineWidth = 1; for (let i = 0; i < 5; i++) { g.beginPath(); g.moveTo(15, 16 + i * 3.5); g.lineTo(30, 16 + i * 3.5); g.stroke(); } g.fillStyle = GOLD; g.fillRect(9, 10, 3, 26); coin(33, 32, 6); }
+  else if (k === "crate") { g.fillStyle = "#6a4a2a"; g.fillRect(9, 16, 26, 20); g.strokeStyle = DK; g.lineWidth = 1.5; g.strokeRect(9, 16, 26, 20); g.beginPath(); g.moveTo(9, 16); g.lineTo(35, 36); g.moveTo(35, 16); g.lineTo(9, 36); g.stroke(); g.fillStyle = "#8a6a3a"; g.fillRect(12, 8, 20, 8); g.strokeRect(12, 8, 20, 8); skull(22, 26, 4); }
+  else if (k === "ore") { const cr = (x, y, w, h, c) => { g.fillStyle = c; g.beginPath(); g.moveTo(x, y - h); g.lineTo(x + w, y - h * 0.4); g.lineTo(x + w * 0.7, y); g.lineTo(x - w * 0.7, y); g.lineTo(x - w, y - h * 0.4); g.closePath(); g.fill(); }; cr(15, 36, 6, 18, "#c9a01e"); cr(28, 36, 7, 24, "#f0d070"); cr(21, 37, 5, 12, "#a07818"); g.fillStyle = "rgba(255,255,255,.5)"; g.fillRect(27, 16, 2, 10); }
+  else if (k === "gear") { g.save(); g.translate(22, 22); g.fillStyle = "#8a8070"; for (let i = 0; i < 8; i++) { g.rotate(TAU / 8); g.fillRect(-3, -16, 6, 7); } g.beginPath(); g.arc(0, 0, 11, 0, TAU); g.fill(); g.fillStyle = "#3a332c"; g.beginPath(); g.arc(0, 0, 5, 0, TAU); g.fill(); g.restore(); skull(22, 22, 3.5); }
+  else if (k === "hammer") { g.save(); g.translate(22, 22); g.rotate(-0.7); g.fillStyle = "#6a4a2a"; g.fillRect(-2, -4, 4, 22); g.fillStyle = "#9a9080"; g.fillRect(-10, -14, 20, 10); g.fillStyle = GOLD; g.fillRect(-10, -9, 20, 2); g.restore(); }
+  else if (k === "shell") { for (const [x, h] of [[15, 22], [29, 22], [22, 28]]) { const y = 38; g.fillStyle = "#b08a3a"; g.fillRect(x - 4, y - h * 0.55, 8, h * 0.55); g.fillStyle = "#6a5a4a"; g.beginPath(); g.moveTo(x - 4, y - h * 0.55); g.lineTo(x, y - h); g.lineTo(x + 4, y - h * 0.55); g.fill(); g.fillStyle = "#d8b860"; g.fillRect(x - 4, y - 3, 8, 3); } }
+  else if (k === "gun") { g.fillStyle = "#5e564c"; g.fillRect(8, 19, 26, 8); g.fillStyle = "#3a342c"; g.fillRect(31, 17, 6, 12); g.fillStyle = GOLD; g.fillRect(14, 18, 3, 10); g.fillRect(22, 18, 3, 10); g.fillStyle = "#4a4038"; g.fillRect(5, 26, 12, 10); g.fillStyle = "#ffd27a"; g.beginPath(); g.moveTo(38, 23); g.lineTo(43, 18); g.lineTo(43, 28); g.fill(); }
+  else if (k === "shield") { g.fillStyle = "#7a7064"; g.beginPath(); g.moveTo(10, 9); g.lineTo(34, 9); g.lineTo(34, 22); g.quadraticCurveTo(34, 33, 22, 39); g.quadraticCurveTo(10, 33, 10, 22); g.closePath(); g.fill(); g.strokeStyle = GOLD; g.lineWidth = 2; g.stroke(); skull(22, 21, 5); }
+  else if (k === "keep") { g.fillStyle = "#5a4c40"; g.fillRect(12, 14, 20, 24); for (let i = 0; i < 4; i++) g.fillRect(12 + i * 5.6, 9, 3.6, 6); g.fillStyle = "#0c0907"; g.beginPath(); g.moveTo(18, 38); g.lineTo(18, 30); g.arc(22, 30, 4, Math.PI, 0); g.lineTo(26, 38); g.fill(); g.fillStyle = "rgba(255,180,90,.9)"; g.fillRect(15, 18, 2, 4); g.fillRect(27, 18, 2, 4); g.strokeStyle = GOLD; g.lineWidth = 1.5; g.strokeRect(12, 14, 20, 24); }
+  else if (k === "flame") { const fl = (s, c) => { g.fillStyle = c; g.beginPath(); g.moveTo(22, 40); g.bezierCurveTo(22 - 13 * s, 36, 22 - 9 * s, 22, 22, 6 + (1 - s) * 18); g.bezierCurveTo(22 + 9 * s, 22, 22 + 13 * s, 36, 22, 40); g.fill(); }; fl(1, "#c8401a"); fl(0.7, "#ff9a3a"); fl(0.4, "#fff0b0"); }
+  else if (k === "eye") { g.fillStyle = "#e8dcc4"; g.beginPath(); g.moveTo(6, 22); g.quadraticCurveTo(22, 8, 38, 22); g.quadraticCurveTo(22, 36, 6, 22); g.fill(); g.fillStyle = "#3a8aff"; g.beginPath(); g.arc(22, 22, 7, 0, TAU); g.fill(); g.fillStyle = "#0c0907"; g.beginPath(); g.arc(22, 22, 3.5, 0, TAU); g.fill(); g.strokeStyle = GOLD; g.lineWidth = 1.5; g.beginPath(); g.moveTo(6, 22); g.quadraticCurveTo(22, 8, 38, 22); g.quadraticCurveTo(22, 36, 6, 22); g.stroke(); }
+  else if (k === "beam") { const grd = g.createLinearGradient(16, 0, 28, 0); grd.addColorStop(0, "rgba(160,220,255,0)"); grd.addColorStop(0.5, "#e8f6ff"); grd.addColorStop(1, "rgba(160,220,255,0)"); g.fillStyle = grd; g.fillRect(16, 2, 12, 32); g.fillStyle = "#ffe9a8"; g.beginPath(); g.ellipse(22, 34, 14, 5, 0, 0, TAU); g.fill(); g.fillStyle = "#fff"; g.beginPath(); g.ellipse(22, 34, 6, 2.5, 0, 0, TAU); g.fill(); }
+  else if (k === "skull") { skull(22, 22, 11); g.strokeStyle = GOLD; g.lineWidth = 2; g.beginPath(); g.moveTo(5, 16); g.quadraticCurveTo(10, 10, 12, 18); g.moveTo(39, 16); g.quadraticCurveTo(34, 10, 32, 18); g.stroke(); }
+}
+function drawTreeIcon(c, id) {
+  const g = c.getContext("2d"); g.setTransform(c.width / 44, 0, 0, c.width / 44, 0, 0); g.clearRect(0, 0, 44, 44);
+  g.fillStyle = "#110c09"; g.beginPath(); g.arc(22, 22, 21, 0, TAU); g.fill(); g.strokeStyle = id === "eco" ? "#d1a54c" : "#d0553c"; g.lineWidth = 2; g.stroke();
+  drawResSym(g, id === "eco" ? "ledger" : "gear");
 }
 /* ============================================================
    Audio: procedural sound effects and generative music (Web Audio)
@@ -4942,6 +5049,15 @@ const RUN_ACTS = {
   skillReset(core) { CORES[core].skills.forEach(s => RUN_ACTS.refund(s.id, core)); saveRun(); },
   repair(frac, cost) { if (RUN.hpFrac >= 1 || RUN.tithe < cost) return; RUN.tithe -= cost; RUN.hpFrac = Math.min(1, RUN.hpFrac + frac); saveRun(); },
 };
+// research that can be bought right now with this much Tithe (drives the glow and the march reminder)
+function affordableResearch(tithe) { const era = eraOf(RUN.col + 1); return RESEARCH.filter(r => { const k = resRank(r.id); return k < 3 && r.era <= era && !(r.req && !RUN.research[r.req]) && tithe >= r.rankCost[k]; }); }
+// shared-screen co-op: any commander's purse counts; online: your own
+function spendTithe() { return RUN.coop && !NET.on ? Math.max(...RUN.coop.map(c => c.tithe)) : RUN.tithe; }
+function skillAvail() {
+  if (!(RUN.skillPts > 0)) return false;
+  const cores = RUN.coop && !NET.on ? RUN.coop.map(c => c.core) : [myCore()];
+  return cores.some(k => CORES[k].skills.some(s => !RUN.skills[s.id] && !(s.req && !RUN.skills[s.req])));
+}
 function runAct(f, ...a) { if (NET.client) { NET.sendAct(f, a); return; } RUN_ACTS[f](...a); }
 const myCore = () => RUN.coop ? RUN.coop[NET.on ? NET.me : RUN.cmd].core : RUN.core;
 
@@ -4987,7 +5103,7 @@ const UI = {
     sc.style.backgroundSize = "cover"; sc.style.backgroundPosition = "center"; sc.style.backgroundAttachment = "fixed";
   },
   closeModal() { $("modal").hidden = true; $("modal").innerHTML = ""; $("mtip").hidden = true; },
-  modal(html) { $("modal").hidden = false; $("modal").innerHTML = '<div class="panel">' + html + "</div>"; },
+  modal(html, cls) { $("modal").hidden = false; $("modal").innerHTML = '<div class="panel' + (cls ? " m-" + cls : "") + '">' + html + "</div>"; },
 
   title() {
     B = null;
@@ -5152,6 +5268,7 @@ const UI = {
     const mw = $("mapwrap"); mw.scrollLeft = Math.max(0, (RUN.col) * colW - 120);
     $("b-council").onclick = () => UI.council();
     $("b-skills").onclick = () => UI.skills();
+    UI.nudgeButtons();
     UI.bindCmd(() => UI.map());
     $("b-help").onclick = () => UI.howto();
     $("b-set").onclick = () => UI.settings();
@@ -5162,7 +5279,7 @@ const UI = {
     const nodeAt = (c, i) => RUN.map[c][i], canGo = (c, i) => c === RUN.col + 1 && avail.includes(i);
     if (!UI.mapSel || !canGo(UI.mapSel[0], UI.mapSel[1])) UI.mapSel = avail.length ? [RUN.col + 1, avail[0]] : null;
     const goLabel = n => n.type === "shrine" ? "Visit shrine" : n.type === "event" ? "Investigate" : "March";
-    const go = (c, i) => { if (NET.client) return; const n = nodeAt(c, i); sfx("click"); UI.mapSel = null; if (n.type === "shrine") UI.shrine(c, i); else if (n.type === "event") UI.omen(c, i); else UI.enterBattle(c, i); };
+    const go = (c, i) => { if (NET.client) return; const n = nodeAt(c, i); sfx("click"); if (n.type === "shrine") { UI.mapSel = null; UI.shrine(c, i); } else if (n.type === "event") { UI.mapSel = null; UI.omen(c, i); } else UI.confirmMarch(() => { UI.mapSel = null; UI.enterBattle(c, i); }); };
     const show = (c, i) => {
       const n = nodeAt(c, i), mod = n.mod ? MODIFIERS.find(m => m.id === n.mod) : null, sel = UI.mapSel, sn = sel && nodeAt(sel[0], sel[1]);
       const preview = !sel || sel[0] !== c || sel[1] !== i;
@@ -5210,7 +5327,8 @@ const UI = {
     $("b-council").onclick = () => UI.council(); $("b-skills").onclick = () => UI.skills(); $("b-set").onclick = () => UI.settings(); $("b-menu").onclick = () => UI.title();
     $("b-repair").onclick = () => { if (RUN.tithe >= repairCostT) { runAct("repair", 0.15, repairCostT); UI.endless(); } };
     UI.bindCmd(() => UI.endless());
-    if ($("b-go")) $("b-go").onclick = () => { sfx("click"); UI.enterBattle(col, 0); };
+    if ($("b-go")) $("b-go").onclick = () => { sfx("click"); UI.confirmMarch(() => UI.enterBattle(col, 0)); };
+    UI.nudgeButtons();
   },
 
   shrine(c, i) {
@@ -5247,27 +5365,57 @@ const UI = {
   },
 
   council() {
-    const era = eraOf(RUN.col + 1);
-    const cols = [0, 1, 2, 3, 4].map(e => `<div style="display:flex;flex-direction:column;gap:8px;min-width:0"><div class="eyebrow">${ERAS[e].name}${e > era ? " · locked" : ""}</div>${RESEARCH.filter(r => r.era === e).map(r => {
-      const rk0 = resRank(r.id), maxed = rk0 >= 3, locked = e > era, needs = r.req && !RUN.research[r.req], cost = maxed ? 0 : r.rankCost[rk0], afford = RUN.tithe >= cost;
-      const off = maxed || locked || needs || !afford;
-      const pips = [0, 1, 2].map(i => `<i class="rpip ${i < rk0 ? "on" : ""}"></i>`).join("");
-      return `<button class="card ${rk0 ? "sel" : ""} ${locked || needs ? "locked" : ""} ${off && !maxed ? "dim" : ""}" data-r="${r.id}" data-tip="r:${r.id}" aria-disabled="${off}"><span class="spread"><h3>${r.name}</h3><span class="row" style="gap:4px">${r.eco ? '<span class="tag economy">Eco</span>' : ""}${r.tower && !r.eco ? '<span class="tag">Tower</span>' : ""}${r.refit ? '<span class="tag refit">Refit</span>' : ""}<span class="tag">${maxed ? "Mastered" : (rk0 ? "Rank " + (rk0 + 1) + " · " : "") + cost + " T"}</span></span></span>
-        <span class="row" style="gap:6px"><span class="rpips" aria-label="Rank ${rk0} of 3">${pips}</span><span class="small num">${rk0}/3</span></span><span class="small">${r.ranks[Math.max(0, rk0 - 1)]}</span></button>`;
-    }).join("")}</div>`).join("");
-    UI.modal(`<div class="spread"><div><div class="eyebrow">Tithe ${fmt(RUN.tithe)}${RUN.coop ? " · Commander " + COOP_NUM[RUN.cmd] + " is paying" : ""}</div><h2>War Council</h2></div>${UI.cmdChips()}<button id="m-x">Close</button></div>
-      <p class="small">Every entry has 3 ranks: the first unlocks it, rank 2 costs half the base price again and makes it 1.5x as strong, rank 3 costs the base price again and makes it twice as strong (tower research also gives that tower +10% / +20%). Research is permanent for this campaign. New research opens as you reach each age. Hover over (or tap) any entry for details. <span class="tag economy">Eco</span> marks economy research; <span class="tag refit">Refit</span> marks later-age research that upgrades earlier towers.</p>
-      <div class="tree">${cols}</div>`);
-    if (era < 4) $("modal").querySelector(".tree").lastElementChild.insertAdjacentHTML("afterbegin", `<span class="small">Opens after you defeat the Maw of the Hollow Star and enter the endless war.</span>`);
+    const era = eraOf(RUN.col + 1), tithe = RUN.tithe;
+    const tile = r => {
+      const rk0 = resRank(r.id), maxed = rk0 >= 3, locked = r.era > era, needs = r.req && !RUN.research[r.req], cost = maxed ? 0 : r.rankCost[rk0], afford = tithe >= cost;
+      const off = maxed || locked || needs || !afford, st = maxed ? "max" : locked || needs ? "lock" : afford ? "avail nudge" : "poor";
+      return `<button class="tal ${st} ${rk0 ? "own" : ""}" data-r="${r.id}" data-tip="r:${r.id}" aria-disabled="${off}" aria-label="${esc(r.name)}, rank ${rk0} of 3"><canvas width="88" height="88" data-ico="${r.id}"></canvas><span class="tal-rk num">${rk0}/3</span>${r.req ? `<span class="tal-req" title="Requires ${esc(RESEARCH.find(x => x.id === r.req).name)}">▲</span>` : ""}<span class="tal-nm">${esc(r.name)}</span><span class="tal-c num">${maxed ? "Mastered" : locked ? "Locked" : cost + " T"}</span></button>`;
+    };
+    const spent = list => list.reduce((a, r) => { const k = resRank(r.id); return a + r.rankCost.slice(0, k).reduce((x, y) => x + y, 0); }, 0);
+    const tree = t => {
+      const list = RESEARCH.filter(r => resTree(r) === t.id);
+      return `<section class="tree" style="--tc:${t.col}"><div class="tree-h"><canvas width="96" height="96" data-tree="${t.id}"></canvas><div><h3>${t.name}</h3><span class="small">${t.sub}</span></div><span class="tree-pts num" title="Tithe invested in this tree">${fmt(spent(list))} T</span></div>
+        ${[0, 1, 2, 3, 4].map(e => { const row = list.filter(r => r.era === e); return `<div class="trow ${e > era ? "locked" : ""}"><div class="tera">${ERAS[e].name.replace(/^Age of (the )?/, "")}${e > era ? "<br><span class='small'>locked</span>" : ""}</div><div class="tnodes">${row.length ? row.map(tile).join("") : `<span class="small" style="opacity:.6">Nothing in this age</span>`}</div></div>`; }).join("")}</section>`;
+    };
+    UI.modal(`<div class="spread"><div><div class="eyebrow">Tithe ${fmt(tithe)}${RUN.coop && !NET.on ? " · Commander " + COOP_NUM[RUN.cmd] + " is paying" : ""}</div><h2>War Council</h2></div>${UI.cmdChips()}<button id="m-x">Close</button></div>
+      <p class="small">Two schools of research, by age. Every entry has 3 ranks: the first unlocks it, rank 2 costs half the base price again and makes it 1.5x as strong, rank 3 costs the base price again and makes it twice as strong. Glowing entries are ones you can afford now. <span style="color:var(--gilt)">▲</span> needs an earlier entry first. Hover or tap for details.</p>
+      <div class="trees">${RES_TREES.map(tree).join("")}</div>`, "wide");
+    if (era < 4) $("modal").querySelectorAll(".trow.locked .tera").forEach(x => { if (x.textContent.startsWith("Eternal")) x.title = "Opens after you defeat the Maw of the Hollow Star and enter the endless war."; });
+    $("modal").querySelectorAll("canvas[data-ico]").forEach(c => drawResIcon(c, RESEARCH.find(r => r.id === c.dataset.ico)));
+    $("modal").querySelectorAll("canvas[data-tree]").forEach(c => drawTreeIcon(c, c.dataset.tree));
     $("m-x").onclick = () => { UI.closeModal(); UI.map(); };
     UI.bindCmd(() => UI.council());
     UI.bindTips($("modal"));
     document.querySelectorAll("[data-r]").forEach(b => b.onclick = () => {
       const r = RESEARCH.find(x => x.id === b.dataset.r);
-      if (b.getAttribute("aria-disabled") === "true") return;
+      if (b.getAttribute("aria-disabled") === "true") { sfx("error"); return; }
       const rk0 = resRank(r.id); if (rk0 >= 3) return;
       runAct("research", r.id); sfx(rk0 ? "upgrade" : "build"); $("mtip").hidden = true; UI.council();
     });
+  },
+
+  // pulse the War Council / Core Shrine buttons while there is something to spend there
+  nudgeButtons() {
+    if (!RUN) return;
+    if ($("b-council")) $("b-council").classList.toggle("nudge", affordableResearch(spendTithe()).length > 0);
+    if ($("b-skills")) $("b-skills").classList.toggle("nudge", skillAvail());
+  },
+
+  // "Before you march": a reminder about unspent Tithe and skill points, which can be switched off for the campaign
+  confirmMarch(go) {
+    if (NET.client || RUN.noNag) return go();
+    const res = affordableResearch(spendTithe()), sk = skillAvail();
+    if (!res.length && !sk) return go();
+    UI.modal(`<div class="eyebrow">Before you march</div><h2>Unspent resources</h2>
+      <ul class="list">${res.length ? `<li>You can afford <b style="color:var(--gilt)">${res.length}</b> research option${res.length > 1 ? "s" : ""} at the War Council (${fmt(spendTithe())} Tithe).</li>` : ""}${sk ? `<li>You have <b style="color:var(--gilt)">${RUN.skillPts}</b> unspent skill point${RUN.skillPts > 1 ? "s" : ""} at the Core Shrine.</li>` : ""}</ul>
+      <p class="small">Do you really want to march without spending ${res.length && sk ? "them" : "it"}?</p>
+      <label class="setrow chk"><input type="checkbox" id="c-nonag"><span>Do not interrupt me again <span class="small">· for the rest of this campaign</span></span></label>
+      <div class="row"><button class="primary" id="c-go">March anyway</button>${res.length ? `<button id="c-council">War Council</button>` : ""}${sk ? `<button id="c-skills">Core Shrine</button>` : ""}<button id="c-x">Cancel</button></div>`, "small");
+    const keep = () => { if ($("c-nonag").checked) { RUN.noNag = true; saveRun(); } };
+    $("c-go").onclick = () => { keep(); UI.closeModal(); go(); };
+    if ($("c-council")) $("c-council").onclick = () => { keep(); UI.council(); };
+    if ($("c-skills")) $("c-skills").onclick = () => { keep(); UI.skills(); };
+    $("c-x").onclick = () => { keep(); UI.closeModal(); };
   },
 
   tipHTML(key) {
@@ -5585,7 +5733,7 @@ const PAN = { on: false, x: 0, y: 0 };
 cv.addEventListener("wheel", e => { if (!B) return; e.preventDefault(); zoomAt(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX, e.clientY); }, { passive: false });
 cv.addEventListener("pointermove", e => {
   if (PAN.on) { CAM.x -= (e.clientX - PAN.x) / VIEW.s; CAM.y -= (e.clientY - PAN.y) / VIEW.s; PAN.x = e.clientX; PAN.y = e.clientY; applyCam(); }
-  if (!B) return; const w = toWorld(e.clientX, e.clientY); mouseW = w;
+  if (!B) return; const w = toWorld(e.clientX, e.clientY); mouseW = w; UI.pointerSeen = true;
   IN.aim(w.x, w.y);
   hoverTower = towerAt(w.x, w.y);
   cv.style.cursor = hoverTower && !B.build ? "pointer" : "crosshair";
