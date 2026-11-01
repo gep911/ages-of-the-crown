@@ -214,6 +214,23 @@ button.nudge{border-color:var(--gilt)!important;color:#ffe9a8}
 .thought{font-family:var(--f-mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--dt-term);border-top:1px solid var(--dt-line);border-bottom:1px solid var(--dt-line);padding:8px 0;opacity:.85}
 .thought b{color:var(--dt-amber);font-weight:400}
 #mapwrap{border:1px solid var(--dt-line);background:rgba(6,8,7,.65)}
+/* draggable battle panels */
+.hpanel{position:fixed;z-index:6;width:300px;max-height:60vh;overflow:auto;background:rgba(10,13,11,.9);border:1px solid #3a463c;box-shadow:0 8px 24px rgba(0,0,0,.6);font:13px/1.35 var(--f-cond,"Arial Narrow",sans-serif);color:#cfcbb4;pointer-events:auto}
+.hp-head{display:flex;align-items:center;gap:6px;padding:5px 6px 5px 10px;background:linear-gradient(180deg,#1d2620,#121813);border-bottom:1px solid #3a463c;cursor:move;font:12px var(--f-mono,monospace);letter-spacing:.14em;text-transform:uppercase;color:#9cc79a;user-select:none}
+.hp-head span{flex:1}
+.hp-btn{padding:2px 7px!important;font-size:10px!important;letter-spacing:.08em}
+.hp-body{padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.hp-big{font-size:13px}.hp-big b{font-size:20px;color:#e0b052}
+.hpanel .dim{color:#7d8473}
+.hpanel table{width:100%;border-collapse:collapse}.hpanel td,.hpanel th{padding:2px 4px;text-align:left}.hpanel th{font:10px var(--f-mono,monospace);letter-spacing:.1em;color:#7d8473;text-transform:uppercase}
+.hpanel td.num,.hpanel th:not(:first-child){text-align:right}
+.hpanel tr+tr td{border-top:1px solid rgba(255,255,255,.05)}
+.hp-sub{font:10px var(--f-mono,monospace);letter-spacing:.14em;text-transform:uppercase;color:#b8914a;margin-top:4px}
+.dm{display:flex;flex-direction:column;gap:3px}
+.dm-row{position:relative;display:grid;grid-template-columns:1fr auto;column-gap:8px;padding:3px 6px;background:rgba(255,255,255,.03);overflow:hidden}.dm-s{grid-column:1/3;font-size:11px}
+.dm-row i{position:absolute;left:0;top:0;bottom:0;background:rgba(200,80,60,.28);z-index:0}.dm-row.c-unit i{background:rgba(160,90,220,.3)}.dm-row.c-other i{background:rgba(160,150,120,.22)}
+.dm-row span{position:relative;z-index:1;white-space:nowrap}.dm-n{overflow:hidden;text-overflow:ellipsis}
+#topbtns button.act{border-color:var(--gilt);color:#ffe9a8}
 </style>
 <div id="app">
   <canvas id="cv"></canvas>
@@ -1155,7 +1172,7 @@ function destroyProp(p) {
   for (let k = 0; k < Math.min(26, 6 + p.r); k++) { const a = rnd(-Math.PI, 0), v = rnd(60, 220); B.parts.push({ x: p.x + rnd(-p.r, p.r) * 0.6, y: p.y - rnd(0, p.r), vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, T: rnd(0.4, 0.9), col: pick(["#5a5048", "#3a332d", "#6b5e48", "#2a2420"]), s: rnd(2, 4.5) }); }
   decal({ k: "rubble", x: p.x, y: p.y, r: p.r * 1.25 });
   B.shake = Math.max(B.shake, Math.min(9, p.r / 4)); sfx(p.r > 20 ? "towerDown" : "boom", p.x, 0.8);
-  if (d.scrap) { const g = Math.round(d.scrap * (1 + 0.3 * B.era)); B.scrap += g; floatText(p.x, p.y - p.r - 14, d.name + " destroyed · +" + g, "#d1a54c", 1.2); }
+  if (d.scrap) { const g = Math.round(d.scrap * (1 + 0.3 * B.era)); B.scrap += g; income("Debris salvage", g); floatText(p.x, p.y - p.r - 14, d.name + " destroyed · +" + g, "#d1a54c", 1.2); }
   if (d.boom) B.pending.push({ x: p.x, y: p.y, r: d.boom, dmg: (p.type === "barrels" ? 90 : 60) * eraScale(), o: { burn: 10 * eraScale() }, label: p.type === "barrels" ? "KABOOM" : null, delay: 0.08 });
 }
 function propAt(x, y, pad) { for (const p of B.props) if (dist2(x, y, p.x, p.y) < (p.r + pad) * (p.r + pad)) return p; return null; }
@@ -1567,6 +1584,28 @@ function synergy(name, x, y) {
   floatText(x, y - 18, name + "!", "#ffd27a", 1.1, true);
 }
 
+/* ---------------- Battle statistics: damage meter and income ledger ----------------
+   Bookkeeping only (never read by the simulation), shown in the draggable HUD panels. */
+function dmgSource(o) {
+  if (o.unit) { const U = UNITS[o.unit.type]; return { k: "u:" + o.unit.type, name: U ? U.name : "Units", cat: "unit" }; }
+  if (o.tw) return { k: "t:" + o.tw.type, name: TOWERS[o.tw.type].name, cat: "tower", type: o.tw.type };
+  if (o.burnBy) return o.burnBy;
+  if (o.dot && o.burning) return { k: "x:burn", name: "Burning", cat: "other" };
+  if (o.label) return { k: "x:" + o.label, name: o.label.charAt(0) + o.label.slice(1).toLowerCase(), cat: "other" };
+  return { k: "x:other", name: "Other (explosions, hazards)", cat: "other" };
+}
+function meterAdd(o, amt, killed) {
+  const M = B.meter || (B.meter = { since: B.t, rows: {} });
+  const src = dmgSource(o), r = M.rows[src.k] || (M.rows[src.k] = { name: src.name, cat: src.cat, type: src.type, dmg: 0, kills: 0 });
+  r.dmg += amt; if (killed) r.kills++;
+}
+function income(src, amt) {
+  if (!(amt > 0)) return;
+  const E = B.econ || (B.econ = { tot: {}, log: [] });
+  E.tot[src] = (E.tot[src] || 0) + amt; E.log.push([B.t, src, amt]);
+  if (E.log.length > 4000 || (E.log.length && E.log[0][0] < B.t - 30)) E.log = E.log.filter(x => x[0] >= B.t - 30);
+}
+
 function damage(e, amt, o) {
   if (e.dead) return;
   o = o || {};
@@ -1591,8 +1630,11 @@ function damage(e, amt, o) {
   if (o.dot) a = Math.max(a * 0.5, a - armor * (o.dt || 0));
   else a = Math.max(a * 0.2, a - armor);
   if (o.unit) e.lastBy = o.unit; else if (o.tw) e.lastBy = o.tw; else if (o.src) e.lastBy = "core";
+  if ((o.unit || o.tw) && !o.burning) e.lastSrc = { unit: o.unit, tw: o.tw };
   if (e.shieldHP > 0) { const ab = Math.min(e.shieldHP, a); e.shieldHP -= ab; a -= ab; e.shT = 0.15; if (e.shieldHP <= 0) { B.fx.push({ k: "ring", x: e.x, y: e.y, r: 0, R: e.r * 2.5, t: 0, T: 0.3, col: "#9fdcff" }); sfx("shield", e.x); } }
+  const hp0 = e.hp;
   e.hp -= a; e.hit = 0.08;
+  if (a > 0) meterAdd(o, Math.min(a, Math.max(0, hp0)), hp0 > 0 && e.hp <= 0);
   if (SETTINGS.dmgNums) { if (crit && a > 1) dmgText(e.x, e.y - e.r * 3, a, true); else e.dmgAcc = (e.dmgAcc || 0) + a; }
   else if (crit && a > 1) floatText(e.x + rnd(-6, 6), e.y - e.r - 6, Math.round(a) + "", "#ffcf5a", 0.7);
   if (o.src === "core") {
@@ -1602,14 +1644,16 @@ function damage(e, amt, o) {
   if (e.hp <= 0) kill(e, o);
 }
 
-function burn(e, dps, t) {
+function burn(e, dps, t, by) {
+  // credit the fire to whoever last hit this enemy with a tower or unit (they almost always set it alight)
+  e.burnBy = by || (e.lastSrc ? dmgSource(e.lastSrc) : e.burnBy);
   dps *= B.mods.burnMult; t *= B.mods.burnDur;
   if (e.tarT > 0) { dps *= 2; synergy("INFERNO", e.x, e.y); }
   e.burnDps = Math.max(e.burnDps * (e.burnT > 0 ? 1 : 0), dps); e.burnT = Math.max(e.burnT, t);
 }
 
 function explode(x, y, r, dmg, o, label) {
-  o = Object.assign({ explosive: true }, o || {});
+  o = Object.assign({ explosive: true }, o || {}); if (label && !o.tw && !o.unit) o.label = label;
   const r2 = r * r;
   for (const e of B.enemies) {
     if (e.dead) continue;
@@ -1643,7 +1687,7 @@ function kill(e, o) {
   }
   let gain = e.scrap / (1 + colC() * 0.3) * B.mods.scrapMult * (B.mod === "bloodmoon" ? 1.6 : 1) * (1 + salv);
   if (has("r_bounty")) { if (e.elite) gain *= 1 + rk("r_bounty"); if (e.type === "boss") gain += 150 * rk("r_bounty"); }
-  B.scrap += gain;
+  B.scrap += gain; income("Kills", gain / (1 + salv)); income("Salvage Yards", gain - gain / (1 + salv));
   for (const t of B.towers) if (t.type === "ossuary") { const s = tStats(t); if (dist2(t.x, t.y, e.x, e.y) <= s.range * s.range) { t.bones = (t.bones || 0) + (e.elite || e.type === "boss" ? 5 : 1); if (s.furnace) B.scrap += e.elite ? 5 : 1; break; } }
   if (has("rosary") && B.streak > 0 && B.streak % 12 === 0) { B.scrap += 20; floatText(e.x, e.y - 30, "+20 Rosary", "#d1a54c"); }
   if (e.sapper) { B.pending.push({ x: e.x, y: e.y, r: 70, dmg: 45 * eraScale(), o: {}, label: null }); }
@@ -2108,7 +2152,7 @@ function updateTower(t, dt) {
           if (s.sink) damage(e, e.maxhp * (e.type === "boss" ? 0.01 : 0.03) * dt, { tw: t, dot: true, dt, ap: 99 });
         }
       } else {
-        if (t.cd <= 0) { t.cd = 0.5; for (const e of B.enemies) if (!e.dead && dist2(t.x, t.y, e.x, e.y) <= r2) { burn(e, s.dmg, 3 * s.dur); e.lastBy = t; } }
+        if (t.cd <= 0) { t.cd = 0.5; for (const e of B.enemies) if (!e.dead && dist2(t.x, t.y, e.x, e.y) <= r2) { burn(e, s.dmg, 3 * s.dur, dmgSource({ tw: t })); e.lastBy = t; } }
         if (s.ember) {
           t.ecd = (t.ecd || 0) - dt;
           if (t.ecd <= 0) {
@@ -2225,16 +2269,16 @@ function updateTower(t, dt) {
       if (s.yield && B.state === "wave") t.acc += s.yield * dt;
       if (t.type === "bank" && B.state === "wave") {
         t.bankT = (t.bankT == null ? 10 : t.bankT) - dt;
-        if (t.bankT <= 0) { t.bankT = 10; const g = Math.min(s.cap, Math.floor(totalScrap() * s.pct)); if (g > 0) { B.scrap += g; floatText(t.x, t.y - 20, "+" + g, "#f0d58a", 0.9); } }
+        if (t.bankT <= 0) { t.bankT = 10; const g = Math.min(s.cap, Math.floor(totalScrap() * s.pct)); if (g > 0) { B.scrap += g; income("Counting Houses", g); floatText(t.x, t.y - 20, "+" + g, "#f0d58a", 0.9); } }
       }
       if (t.type === "ossuary" && s.totem) { const r2 = s.range * s.range; for (const e of B.enemies) if (!e.dead && dist2(t.x, t.y, e.x, e.y) <= r2) { e.totemT = 0.3; e.slowF = Math.max(e.slowT > 0 ? e.slowF : 0, 0.12); e.slowT = Math.max(e.slowT, 0.2); } }
       if (t.type === "salvage" && s.cranes) for (const o of B.towers) if (o !== t && dist2(o.x, o.y, t.x, t.y) <= s.range * s.range) o.hp = Math.min(o.maxhp, o.hp + o.maxhp * 0.02 * dt);
-      if (t.acc >= 5) { B.scrap += 5; t.acc -= 5; floatText(t.x, t.y - 20, "+5", "#d1a54c", 0.6); }
+      if (t.acc >= 5) { B.scrap += 5; t.acc -= 5; income(TOWERS[t.type].name + "s", 5); floatText(t.x, t.y - 20, "+5", "#d1a54c", 0.6); }
       break;
     }
     case "extract": {
       if (B.state === "wave") t.acc += s.yield * dt;
-      if (t.acc >= 5) { B.scrap += 5; t.acc -= 5; floatText(t.x, t.y - 20, "+5", "#d1a54c", 0.6); }
+      if (t.acc >= 5) { B.scrap += 5; t.acc -= 5; income(TOWERS[t.type].name + "s", 5); floatText(t.x, t.y - 20, "+5", "#d1a54c", 0.6); }
       break;
     }
   }
@@ -2557,7 +2601,7 @@ function updateEnemy(e, dt) {
   if (e.affix.includes("regen")) e.hp = Math.min(e.maxhp, e.hp + e.maxhp * 0.025 * dt);
   if (e.shT > 0) e.shT -= dt;
   if (e.totemT > 0) e.totemT -= dt;
-  if (e.burnT > 0) { e.burnT -= dt; damage(e, e.burnDps * dt, { dot: true, dt }); if (R() < dt * 6) B.parts.push({ x: e.x + rnd(-e.r, e.r), y: e.y, vx: 0, vy: -30, t: 0, T: 0.4, col: "#ff8a3a", s: 2 }); if (e.dead) return; }
+  if (e.burnT > 0) { e.burnT -= dt; damage(e, e.burnDps * dt, { dot: true, dt, burning: true, burnBy: e.burnBy || null }); if (R() < dt * 6) B.parts.push({ x: e.x + rnd(-e.r, e.r), y: e.y, vx: 0, vy: -30, t: 0, T: 0.4, col: "#ff8a3a", s: 2 }); if (e.dead) return; }
   if (e.slowT > 0) e.slowT -= dt;
   if (e.spotT > 0) e.spotT -= dt;
   if (e.tarT > 0) e.tarT -= dt; else e.strip = 0;
@@ -5733,10 +5777,12 @@ const UI = {
       <span class="stat" id="t-tithe-w">Tithe <b class="num" id="t-tithe"></b></span>
       <span class="stat" id="t-state"></span>
       <span class="stat small" id="t-era"></span>
-      <span id="topbtns"><button id="h-zout" title="Zoom out (−, mouse wheel)">−</button><button id="h-zin" title="Zoom in (+, mouse wheel). Pan with WASD, arrows or middle-drag">+</button><button id="h-zfit" title="Show the whole map (0)">Fit</button><button id="h-speed"></button><button id="h-snd"></button><button id="h-pause">Pause</button></span>`;
+      <span id="topbtns"><button id="h-zout" title="Zoom out (−, mouse wheel)">−</button><button id="h-zin" title="Zoom in (+, mouse wheel). Pan with WASD, arrows or middle-drag">+</button><button id="h-zfit" title="Show the whole map (0)">Fit</button><button id="h-speed"></button><button id="h-snd"></button><button id="h-ledger" title="Income ledger (L)">Ledger</button><button id="h-dmg" title="Damage meter (K)">Damage</button><button id="h-pause">Pause</button></span>`;
     $("h-speed").onclick = () => { IN.speed(); UI.hud(true); };
     $("h-snd").onclick = () => { SETTINGS.muted = !SETTINGS.muted; saveSettings(); audio(); applyVolumes(); UI.hud(true); };
     $("h-pause").onclick = () => UI.pause();
+    $("h-ledger").onclick = () => PANELS.toggle("ledger"); $("h-dmg").onclick = () => PANELS.toggle("dmg");
+    PANELS.restore();
     $("h-zin").onclick = () => zoomAt(1.25); $("h-zout").onclick = () => zoomAt(1 / 1.25); $("h-zfit").onclick = () => resetCam();
     const P = actP(); UI.hudCmd = B.cmd;
     $("abil").innerHTML = `${B.wallet ? `<div class="ab" id="a-cmd" style="color:${COOP_COL[P.id]}" title="${NET.on ? "You" : "Press C to hand the controls to the next commander"}">Commander ${COOP_NUM[P.id]}${NET.on && RUN.coop[P.id] && RUN.coop[P.id].name ? " · " + esc(RUN.coop[P.id].name) : ""}</div>` : ""}<div class="ab small" id="a-perks" style="font-family:var(--f-body)" hidden></div>`;
@@ -5762,6 +5808,7 @@ const UI = {
     if (B.group) { B.group = B.group.filter(x => B.towers.includes(x)); if (B.group.length < 2 || !B.group.includes(t)) B.group = null; }
     const key = B.group ? "G" + B.group.map(x => [B.towers.indexOf(x), x.level, x.branch, JSON.stringify(x.ups), Math.round(x.hp / x.maxhp * 10)].join(":")).join("|") + "|" + Math.floor(B.scrap / 5) : t ? [B.towers.indexOf(t), (t.squad || []).filter(u => !u.dead).length, t.level, t.branch, JSON.stringify(t.ups), Math.round(t.hp / t.maxhp * 20), B.scrap >= upCost(t), B.scrap >= repairCost(t), (TOWERS[t.type].ups || []).map(k => B.scrap >= statCost(t, k)).join(""), t.plenty].join() : "";
     if (key !== UI.lastSelKey || force) { UI.lastSelKey = key; UI.selPanel(); }
+    PANELS.update(force);
   },
 
   // several towers of the same type selected with Shift-click: upgrade, repair or sell them together
@@ -5927,6 +5974,68 @@ const UI = {
 function showToastLegacy(p) { if (p) setTimeout(() => showBannerScreen("+" + p + " Legacy"), 50); }
 function showBannerScreen(t) { const s = $("screen"); const d = document.createElement("div"); d.className = "panel"; d.style.cssText = "position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:20"; d.innerHTML = `<h3>${esc(t)}</h3>`; s.appendChild(d); setTimeout(() => d.remove(), 2500); }
 
+/* ---------------- Draggable battle panels: income ledger and damage meter ---------------- */
+const PANELS = {
+  st: Object.assign({ ledger: { open: false, x: 14, y: 70 }, dmg: { open: false, x: -330, y: 70 } }, load("aotc_panels") || {}),
+  last: 0,
+  save() { store("aotc_panels", PANELS.st); },
+  toggle(id) { PANELS.st[id].open = !PANELS.st[id].open; PANELS.save(); PANELS.restore(); PANELS.update(true); },
+  restore() {
+    for (const id of ["ledger", "dmg"]) {
+      let el = $("p-" + id);
+      if (!PANELS.st[id].open) { if (el) el.remove(); continue; }
+      if (!el) {
+        el = document.createElement("div"); el.id = "p-" + id; el.className = "hpanel";
+        el.innerHTML = `<div class="hp-head"><span>${id === "ledger" ? "Ledger · income" : "Damage meter"}</span>${id === "dmg" ? '<button class="hp-btn" data-reset="1" title="Reset the meter">Reset</button>' : ""}<button class="hp-btn" data-close="1" title="Close">✕</button></div><div class="hp-body"></div>`;
+        $("hud").appendChild(el);
+        const head = el.querySelector(".hp-head");
+        head.addEventListener("pointerdown", e => {
+          if (e.target.closest("button")) return;
+          e.preventDefault(); const r = el.getBoundingClientRect(), ox = e.clientX - r.left, oy = e.clientY - r.top;
+          const mv = ev => { const p = PANELS.st[id]; p.x = clamp(ev.clientX - ox, 0, innerWidth - 120); p.y = clamp(ev.clientY - oy, 0, innerHeight - 40); el.style.left = p.x + "px"; el.style.top = p.y + "px"; };
+          const up = () => { removeEventListener("pointermove", mv); removeEventListener("pointerup", up); PANELS.save(); };
+          addEventListener("pointermove", mv); addEventListener("pointerup", up);
+        });
+        el.querySelector("[data-close]").onclick = () => PANELS.toggle(id);
+        const rs = el.querySelector("[data-reset]"); if (rs) rs.onclick = () => { if (B) { B.meter = { since: B.t, rows: {} }; PANELS.update(true); } };
+      }
+      const p = PANELS.st[id]; if (p.x < 0) p.x = innerWidth + p.x; el.style.left = clamp(p.x, 0, innerWidth - 120) + "px"; el.style.top = clamp(p.y, 0, innerHeight - 40) + "px";
+    }
+    if ($("h-ledger")) { $("h-ledger").classList.toggle("act", PANELS.st.ledger.open); $("h-dmg").classList.toggle("act", PANELS.st.dmg.open); }
+  },
+  update(force) {
+    if (!B) return;
+    const now = performance.now(); if (!force && now - PANELS.last < 400) return; PANELS.last = now;
+    if ($("p-ledger")) $("p-ledger").querySelector(".hp-body").innerHTML = PANELS.ledgerHTML();
+    if ($("p-dmg")) $("p-dmg").querySelector(".hp-body").innerHTML = PANELS.dmgHTML();
+  },
+  ledgerHTML() {
+    const E = B.econ || { tot: {}, log: [] }, win = Math.min(20, Math.max(1, B.t)), recent = {};
+    for (const [t, src, a] of E.log) if (t >= B.t - win) recent[src] = (recent[src] || 0) + a;
+    const srcs = [...new Set(Object.keys(E.tot).concat(Object.keys(recent)))].sort((a, b) => (recent[b] || 0) - (recent[a] || 0) || (E.tot[b] || 0) - (E.tot[a] || 0));
+    const tot = Object.values(recent).reduce((a, b) => a + b, 0) / win, n = B.wallet ? B.wallet.length : 1;
+    // what the economy buildings produce right now (scrap per second while a wave is being fought)
+    const by = {};
+    for (const t of B.towers) {
+      const d = TOWERS[t.type]; if (d.tab !== "eco") continue; const s = tStats(t), r = by[t.type] || (by[t.type] = { n: 0, ps: 0, tithe: 0 });
+      r.n++; if (s.yield) r.ps += s.yield; if (t.type === "bank") r.ps += Math.min(s.cap, Math.floor(totalScrap() * s.pct)) / 10; if (s.tithe) r.tithe += s.tithe;
+    }
+    const bRows = Object.entries(by).map(([k, r]) => `<tr><td>${TOWERS[k].name} <span class="dim">×${r.n}</span></td><td class="num">${r.ps ? r.ps.toFixed(1) + "/s" : "—"}</td><td class="num">${r.tithe ? "+" + r.tithe + " T/wave" : k === "salvage" ? "kill bonus" : k === "ossuary" ? "bones → Tithe" : ""}</td></tr>`).join("");
+    return `<div class="hp-big"><b class="num">${tot.toFixed(1)}</b> scrap/s <span class="dim">last ${Math.round(win)}s${n > 1 ? " · your share " + (tot / n).toFixed(1) + "/s" : ""}</span></div>
+      <table><tr><th>Source</th><th>/s</th><th>Battle</th></tr>${srcs.length ? srcs.map(k => `<tr><td>${esc(k)}</td><td class="num">${((recent[k] || 0) / win).toFixed(1)}</td><td class="num">${fmt(E.tot[k] || 0)}</td></tr>`).join("") : `<tr><td colspan="3" class="dim">No income yet</td></tr>`}</table>
+      <div class="hp-sub">Economy buildings (during waves)</div>
+      <table>${bRows || `<tr><td class="dim">None built yet. Try the Economy tab.</td></tr>`}</table>
+      <div class="hp-sub">Tithe</div><div class="dim">+${B.bonusTithe} from buildings so far · about <b class="num">${fmt(battleTithe())}</b> if you win${n > 1 ? " (split " + n + " ways)" : ""}</div>`;
+  },
+  dmgHTML() {
+    const M = B.meter || { since: 0, rows: {} }, rows = Object.values(M.rows).sort((a, b) => b.dmg - a.dmg);
+    const total = rows.reduce((a, r) => a + r.dmg, 0), secs = Math.max(1, B.t - M.since), top = rows.length ? rows[0].dmg : 1;
+    const count = {}; for (const t of B.towers) count[t.type] = (count[t.type] || 0) + 1;
+    return `<div class="hp-big"><b class="num">${fmt(total)}</b> damage <span class="dim">${fmt(total / secs)}/s over ${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, "0")}</span></div>
+      ${rows.length ? `<div class="dm">${rows.slice(0, 14).map(r => `<div class="dm-row c-${r.cat}"><i style="width:${(r.dmg / top * 100).toFixed(1)}%"></i><span class="dm-n">${esc(r.name)}${r.type && count[r.type] ? ` <span class="dim">×${count[r.type]}</span>` : ""}</span><span class="num dm-v">${fmt(r.dmg)} <span class="dim">${(r.dmg / Math.max(1, total) * 100).toFixed(0)}%</span></span><span class="dm-s dim num">${fmt(r.dmg / secs)} dmg/s · ${r.kills} kills</span></div>`).join("")}</div>` : `<div class="dim">No damage dealt yet.</div>`}`;
+  },
+};
+
 /* ---------------- Input ---------------- */
 function towerAt(x, y) { for (const t of B.towers) if (dist2(x, y, t.x, t.y) <= (t.r + 4) * (t.r + 4)) return t; return null; }
 
@@ -5988,6 +6097,8 @@ window.addEventListener("keydown", e => {
     if (k === "escape" && (B.build || B.sel || B.moving)) { B.build = null; B.sel = null; B.group = null; B.moving = null; UI.buildBar(); UI.hud(true); return; }
     if (B.paused) { if (NET.on) NET.cmd("pause", [false]); else B.paused = false; UI.closeModal(); } else UI.pause(); return;
   }
+  if (k === "l") { PANELS.toggle("ledger"); return; }
+  if (k === "k") { PANELS.toggle("dmg"); return; }
   if (B.paused || B.state === "pick") return;
   if (e.key === "Tab") { e.preventDefault(); const o = ["weapons", "support", "eco", "forces"]; B.tab = o[(o.indexOf(B.tab) + 1) % 4]; B.build = null; UI.buildBar(); return; }
   const tk = /^[1-9]$/.test(k) ? (TAB_ORDER[B.tab] || [])[+k - 1] : null;
