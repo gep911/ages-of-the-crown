@@ -288,7 +288,7 @@ const TOWERS = {
     desc: "Very long range. Shoots the healthiest enemy in range and pierces 6 armour.", syn: "Pairs well with walls: brutes stall and get picked apart.",
     ups: ["dmg", "rate", "range", "multi"],
     br: [{ name: "Executioner", desc: "Triple damage against elites and tyrants." }, { name: "Bolt-Action Drills", desc: "Fire rate x1.8." }, { name: "Marked for Death", desc: "Hit enemies take +30% damage from everything for 4s." }] },
-  mortar: { name: "Basilisk Artillery", tab: "weapons", cost: 110, hp: 130, r: 18, range: 440, minRange: 90, rate: 0.35, dmg: 55, splash: 75, kind: "mortar", tags: ["explosive"], col: "#b0a080", research: "r_mortar",
+  mortar: { name: "Basilisk Artillery", tab: "weapons", cost: 110, hp: 130, r: 18, range: 440, minRange: 90, rate: 0.35, dmg: 41.25, splash: 75, kind: "mortar", tags: ["explosive"], col: "#b0a080", research: "r_mortar",
     desc: "A gothic howitzer that lobs long-range shells which burst on groups. Cannot hit enemies right next to it.", syn: "OVERLOAD: explosions deal +50% to shocked enemies.",
     ups: ["dmg", "rate", "range", "splash"],
     br: [{ name: "Cluster Shells", desc: "Each shell scatters 4 bomblets." }, { name: "Earthshaker", desc: "Damage x2 and stuns for 0.6s." }, { name: "Incendiary Shells", desc: "Leaves burning ground for 3s." }] },
@@ -493,6 +493,7 @@ const RESEARCH = [
   { id: "r_cheap",  name: "Standard Patterns", era: 1, cost: 80,  desc: "All towers cost 10% less to build.", eco: true, info: "Stacks with the Conscript Labour blessing." },
   { id: "r_fire",   name: "Greek Fire",        era: 1, cost: 60,  desc: "Burns deal +30% damage.", info: "Affects Braziers, Pyre Cannons, burning ground and anything else that sets enemies alight." },
   { id: "r_dmg2",   name: "Rifled Barrels",    era: 1, cost: 90,  desc: "Towers deal +15% damage.", req: "r_dmg1", info: "Stacks on top of Forged Iron." },
+  { id: "r_ground", name: "Consecrated Ground", era: 1, cost: 90, desc: "The build circle grows by 1 hex ring.", info: "Priests bless the soil beyond the walls so it can be built on. Your sight line in the fog grows with it." },
   { id: "r_hull1",  name: "Buttressed Keep",   era: 1, cost: 70,  desc: "Citadel max health +20%.", info: "Damage still carries between battles." },
   // ---- Age of Brass ----
   { id: "r_arc",    name: "Galvanic Rites",    era: 2, cost: 120, tower: "arc" },
@@ -509,7 +510,6 @@ const RESEARCH = [
   { id: "r_tithe2", name: "Tithe Assessors",   era: 2, cost: 110, desc: "+25% Tithe from battles. Each holding pays +5 more.", eco: true, req: "r_tithe1", info: "Makes capturing holdings much more valuable." },
   { id: "r_upg",    name: "Master Artificers", era: 2, cost: 90,  desc: "Level upgrades cost 20% less.", eco: true, info: "Cheaper level 2 and level 3 upgrades for every tower." },
   { id: "r_repair", name: "Repair Servitors",  era: 2, cost: 90,  desc: "All structures regenerate 0.5% health per second.", info: "Damaged towers slowly heal during battle." },
-  { id: "r_core1",  name: "Breech Rites",      era: 2, cost: 100, desc: "Hero weapon damage +20%.", info: "Boosts your citadel gun's primary fire and special." },
   { id: "r_choice", name: "Fourth Augury",     era: 2, cost: 140, desc: "Blessing picks offer 4 choices.", info: "After every wave you choose from four blessings." },
   { id: "r_reroll", name: "Second Augury",     era: 2, cost: 90,  desc: "+1 blessing reroll per battle.", info: "Lets you redraw the blessing choices once per battle." },
   // ---- Age of the Void ----
@@ -523,7 +523,6 @@ const RESEARCH = [
   { id: "r_rf_eco", name: "Void Ledgers",      era: 3, cost: 120, desc: "All economy buildings produce +15% (scrap and Tithe).", eco: true, info: "Upgrades every economy building you can build." },
   { id: "r_market", name: "Relic Markets",     era: 3, cost: 120, desc: "+4% Tithe from battles for every relic you carry.", eco: true, info: "Rewards collecting relics from elites, shrines and tyrants." },
   { id: "r_rf_oss", name: "Void Reliquaries",  era: 3, cost: 110, desc: "Ossuaries and Salvage Yards +40% radius.", eco: true, refit: "ossuary", info: "Covers far more of the killing field." },
-  { id: "r_core2",  name: "Sanctified Munitions", era: 3, cost: 150, desc: "Hero damage +25% and abilities recharge 15% faster.", req: "r_core1", info: "Stacks with Breech Rites." },
   { id: "r_dmg3",   name: "Plasma Sanctification", era: 3, cost: 150, desc: "Towers deal +20% damage.", req: "r_dmg2", info: "The last tower damage upgrade." },
   { id: "r_hull2",  name: "Void-Shielded Keep", era: 3, cost: 140, desc: "Citadel max health +25% and takes 10% less damage.", req: "r_hull1", info: "Stacks with Buttressed Keep." },
   { id: "r_last",   name: "Last Rites",        era: 3, cost: 180, desc: "Once per battle, the citadel survives a killing blow at 30% health.", info: "Works alongside the Saint's Return blessing." },
@@ -532,7 +531,7 @@ const RESEARCH = [
   { id: "r_voidyard", name: "Void Yards",         era: 4, cost: 260, tower: "voidyard" },
   { id: "r_orbital", name: "Orbital Lance Strike", era: 4, cost: 200, desc: "Every 10s a lance from orbit strikes the healthiest enemy for 25% of its max health (5% on tyrants).", info: "A beam of light from the fleet above. Ranks make it hit harder." },
   { id: "r_cyclonic", name: "Cyclonic Torpedo",   era: 4, cost: 220, desc: "Once per battle, when the citadel falls below 50% health, every enemy loses 40% of its health (10% for tyrants).", info: "The fleet's last resort, fired into your own battlefield." },
-  { id: "r_choir",   name: "Astropathic Choir",   era: 4, cost: 190, desc: "Towers deal +15% damage and core abilities recharge 15% faster.", info: "A choir of psykers sings your guns onto target." },
+  { id: "r_choir",   name: "Astropathic Choir",   era: 4, cost: 190, desc: "Towers deal +15% damage.", info: "A choir of psykers sings your guns onto target." },
   { id: "r_adamant", name: "Adamantium Bastions", era: 4, cost: 180, desc: "All structures +40% health and walls regenerate 2% per second.", info: "Every tower and wall section is rebuilt in adamantium." },
   { id: "r_sacred",  name: "Sacred Promethium",   era: 4, cost: 170, desc: "Burns deal +50% damage and Pyre Cannons, Braziers and the Pyre Bastion ignore armour.", info: "Blessed fuel that burns even ceramite." },
   { id: "r_relic_t", name: "Relic Titan Weapons", era: 4, cost: 230, desc: "Titans deal +30% damage and their void shields are 30% stronger.", req: "r_titan", info: "Ancient weapons recovered from fallen god-engines." },
@@ -548,6 +547,7 @@ RESEARCH.forEach(r => {
 // additionally gives that tower +10% / +20% damage, attack speed and range (or output).
 const RES_RANK_COST = [1, 0.5, 1];
 const RES_CUSTOM = {
+  r_ground: ["The build circle grows by 1 hex ring.", "The build circle grows by 2 hex rings.", "The build circle grows by 3 hex rings."],
   r_reroll: ["+1 blessing reroll per battle.", "+2 blessing rerolls per battle.", "+3 blessing rerolls per battle."],
   r_veins: ["+1 ore vein in every battle.", "+2 ore veins in every battle.", "+3 ore veins in every battle."],
   r_choice: ["Blessing picks offer 4 choices.", "Blessing picks offer 5 choices.", "Blessing picks offer 6 choices."],
@@ -599,7 +599,7 @@ const PERKS = [
 
 /* ---------------- Relics (whole run) ---------------- */
 const RELICS = [
-  { id: "shard", name: "Shard of the Crown", desc: "+15% damage for core and towers." },
+  { id: "shard", name: "Shard of the Crown", desc: "+15% damage for towers." },
   { id: "bonecenser", name: "Bone Censer", desc: "Burning enemies spread fire when they die." },
   { id: "ledger", name: "Ledger of Debts", desc: "+25% Tithe from battles." },
   { id: "guild", name: "Masons' Guild Seal", desc: "Tower upgrades cost 30% less." },
@@ -735,7 +735,7 @@ const RES_TREES = [
   { id: "sup", name: "Officio Bastionis", sub: "Walls, shrines, wards and the craft of holding ground", col: "#8fb4c8" },
 ];
 // support tree: support-tab structures and their refits, plus defensive and utility research
-const RES_SUPPORT = ["r_hp1", "r_hull1", "r_hull2", "r_repair", "r_adamant", "r_last", "r_choice", "r_reroll"];
+const RES_SUPPORT = ["r_ground", "r_hp1", "r_hull1", "r_hull2", "r_repair", "r_adamant", "r_last", "r_choice", "r_reroll"];
 const resTree = r => { if (r.eco) return "eco"; const tw = r.tower || r.refit; if ((tw && TOWERS[tw].tab === "support") || RES_SUPPORT.includes(r.id)) return "sup"; return "war"; };
 // what kind of research it is: a new structure, an ability that fires during battle, or an upgrade
 const RES_ABILITY = ["r_orbital", "r_cyclonic", "r_last", "r_reroll"];
@@ -750,11 +750,19 @@ function resRelated(r) {
 const RES_SYM = {
   r_start: "crate", r_tithe1: "ledger", r_tithe2: "ledger", r_alms: "coin", r_drill: "gear", r_bounty: "skullcoin", r_veins: "ore",
   r_cheap: "hammer", r_scrap: "gear", r_upg: "hammer", r_rf_eco: "ledger", r_market: "coin",
-  r_dmg1: "shell", r_dmg2: "shell", r_dmg3: "shell", r_hp1: "shield", r_fire: "flame", r_hull1: "keep", r_hull2: "keep", r_repair: "gear",
+  r_ground: "keep", r_dmg1: "shell", r_dmg2: "shell", r_dmg3: "shell", r_hp1: "shield", r_fire: "flame", r_hull1: "keep", r_hull2: "keep", r_repair: "gear",
   r_core1: "gun", r_core2: "gun", r_choice: "eye", r_reroll: "eye", r_last: "skull", r_orbital: "beam", r_cyclonic: "beam",
   r_choir: "skull", r_adamant: "shield", r_sacred: "flame",
 };
 const RES_TOWER_ICON = { r_relic_t: "titanforge", r_fleet: "voidyard" };
+
+// The citadel gun was removed: drop blessings, relics and Legacy unlocks that only affected it
+const GUN_ONLY = { perks: ["zeal", "wrath", "swift", "holyfire", "static", "shrapnel", "chain"], relics: ["hourglass", "skullcup"] };
+for (let i = PERKS.length - 1; i >= 0; i--) if (GUN_ONLY.perks.includes(PERKS[i].id)) PERKS.splice(i, 1);
+for (let i = RELICS.length - 1; i >= 0; i--) if (GUN_ONLY.relics.includes(RELICS[i].id)) RELICS.splice(i, 1);
+for (let i = LEGACY.length - 1; i >= 0; i--) if (LEGACY[i].id.startsWith("u_")) LEGACY.splice(i, 1);
+// starting scrap that used to be "paid" for by the citadel gun, split between the commanders
+const START_BONUS = 300;
 /* ============================================================
    Persistence, run state, and battle simulation
    ============================================================ */
@@ -978,7 +986,7 @@ function startBattle(col, idx) {
     deposits: [], portals: [], spawnQueue: [], perks: [], mods: null, t: 0, units: [], walls: [], links: [], moving: null,
     core: { hp: 0, max: 0, inv: 0, revive: false },
     players: (RUN.coop || [{ core: RUN.core }]).map((c, i, a) => mkPlayer(i, c.core, a.length)),
-    scrap: 150 + col * 10 + 40 * rank("l_scrap") + Math.round(60 * rk("r_start")) + (has("chalice") ? 120 : 0) + (node.mod === "pious" ? 100 : 0) + (RUN.carry || 0) + (RUN.nextScrap || 0),
+    scrap: 150 + START_BONUS + col * 10 + 40 * rank("l_scrap") + Math.round(60 * rk("r_start")) + (has("chalice") ? 120 : 0) + (node.mod === "pious" ? 100 : 0) + (RUN.carry || 0) + (RUN.nextScrap || 0),
     kills: 0, rerolls: resRank("r_reroll") + rank("l_reroll"), sel: null, build: null, tab: "weapons", bankT: 10, indul: 0, speed: 1, paused: false,
     shake: 0, sunT: 8, synT: {}, bonusTithe: 0, boss: null, picks: null,
   };
@@ -1075,6 +1083,9 @@ function destroyProp(p) {
 }
 function propAt(x, y, pad) { for (const p of B.props) if (dist2(x, y, p.x, p.y) < (p.r + pad) * (p.r + pad)) return p; return null; }
 
+// the build circle (Consecrated Ground research adds hex rings) and the clear sight line 5 rings beyond it
+const buildR = () => BUILD_R + HEX_STEP * resRank("r_ground");
+const visR = () => buildR() + 5 * HEX_STEP;
 // a point just beyond the map's edge in direction a from the citadel
 function edgePoint(a, out) { const c = Math.cos(a), sn = Math.sin(a), t = Math.min(Math.abs(c) > 1e-6 ? (W / 2) / Math.abs(c) : 1e9, Math.abs(sn) > 1e-6 ? (H / 2) / Math.abs(sn) : 1e9); return { x: CX + c * (t + out), y: CY + sn * (t + out) }; }
 function portalCount(w) {
@@ -1089,7 +1100,9 @@ function portalCount(w) {
 function genWave(w) {
   const elite = B.type === "elite", c = colC(), En = endlessN(B.col);
   // enemy numbers: x4 the original budget (doubled twice at the player's request)
-  let budget = 4 * (36 + c * 28 + c * c * 2 + w * (10 + c * 1.5)) * (elite ? 1.3 : 1) * (B.counter ? 1.35 : 1) * (B.mod === "bloodmoon" ? 1.25 : 1) * (1 + Math.max(0, c - 5) * 0.05) * (1 + 0.12 * En);
+  // without the citadel gun the opening battles were unwinnable: the budget eases in over the first battles
+  const ease = Math.min(1, 0.45 + 0.1 * c + 0.03 * w);
+  let budget = ease * 4 * (36 + c * 28 + c * c * 2 + w * (10 + c * 1.5)) * (elite ? 1.3 : 1) * (B.counter ? 1.35 : 1) * (B.mod === "bloodmoon" ? 1.25 : 1) * (1 + Math.max(0, c - 5) * 0.05) * (1 + 0.12 * En);
   const pool = Object.entries(ENEMIES).filter(([k, d]) => d.era <= B.era && (d.minWave || 0) <= w + (c > 0 ? 1 : 0)).map(([k]) => k);
   const skies = B.mod === "skies";
   const weights = { thrall: 5, swarm: B.mod === "swarms" || (skies && B.era < 2) ? 7 : 2, brute: 2, spitter: 2, herald: w >= 2 || elite ? 1 : 0,
@@ -1188,7 +1201,7 @@ function mkEnemy(d, x, y, elite) {
   const hm = d.shape === "boss" ? 1 : hpMult();
   const hp = d.hp * hm * (elite ? 3.2 : 1);
   return {
-    x, y, hp, maxhp: hp, speed: d.speed * (B.mod === "fog" ? 1.15 : 1) * (DIFFS[RUN.diff].speed || 1) * rnd(0.9, 1.1), dmg: d.dmg * (1 + colC() * 0.12) * Math.pow(1.17, colC()) * Math.pow(1.08, endlessN(B.col)) * (DIFFS[RUN.diff].dmg || 1),
+    x, y, vis: false, hp, maxhp: hp, speed: d.speed * (B.mod === "fog" ? 1.15 : 1) * (DIFFS[RUN.diff].speed || 1) * rnd(0.9, 1.1), dmg: d.dmg * (1 + colC() * 0.12) * Math.pow(1.17, colC()) * Math.pow(1.08, endlessN(B.col)) * (DIFFS[RUN.diff].dmg || 1),
     flying: !!d.flying, sapper: d.sapper ? d.sapper * (1 + colC() * 0.12) * Math.pow(1.17, colC()) * Math.pow(1.08, endlessN(B.col)) * (DIFFS[RUN.diff].dmg || 1) : 0, ward: d.ward || 0, wardT: 2, shieldHP: 0, affix: [], alt: d.flying ? 26 : 0,
     armor: (d.armor || 0) + (B.mod === "armored" ? 3 : 0) + B.era, r: d.r * (elite ? 1.35 : 1), scrap: d.scrap * (elite ? 5 : 1),
     ranged: d.ranged || 0, aura: d.aura || 0, shape: d.shape, elite, atkCd: rnd(0, 1), burnDps: 0, burnT: 0, slowF: 0, slowT: 0,
@@ -1243,14 +1256,14 @@ function refreshTowerHP(t) {
 const HEX_R = Math.round(26 * SZ), HEX_SX = Math.sqrt(3) * HEX_R, HEX_SY = 1.5 * HEX_R * 0.82;
 function hexRound(q, r) { let x = q, z = r, y = -x - z, rx = Math.round(x), ry = Math.round(y), rz = Math.round(z); const dx = Math.abs(rx - x), dy = Math.abs(ry - y), dz = Math.abs(rz - z); if (dx > dy && dx > dz) rx = -ry - rz; else if (dy <= dz) rz = -rx - ry; return [rx, rz]; }
 function hexSnap(x, y) { const r = (y - CY) / HEX_SY, q = (x - CX) / HEX_SX - r / 2; const [hq, hr] = hexRound(q, r); return { x: CX + HEX_SX * (hq + hr / 2), y: CY + HEX_SY * hr, q: hq, r: hr }; }
-const HEX_CELLS = (() => { const out = []; for (let r = -20; r <= 20; r++) for (let q = -20; q <= 20; q++) { const x = CX + HEX_SX * (q + r / 2), y = CY + HEX_SY * r, d = dist(x, y, CX, CY); if (d <= BUILD_R - 8 && d >= CORE_R + 22) out.push({ x, y, q, r }); } return out; })();
+const HEX_CELLS = (() => { const out = []; for (let r = -20; r <= 20; r++) for (let q = -20; q <= 20; q++) { const x = CX + HEX_SX * (q + r / 2), y = CY + HEX_SY * r, d = dist(x, y, CX, CY); if (d <= BUILD_R + 3 * HEX_STEP - 8 && d >= CORE_R + 22) out.push({ x, y, q, r, d }); } return out; })(); // up to 3 Consecrated Ground rings
 function canPlace(k, x, y) {
   const d = TOWERS[k];
   if (!d.vein) { const h = hexSnap(x, y); x = h.x; y = h.y; if (B.towers.some(t => Math.abs(t.x - x) < 6 && Math.abs(t.y - y) < 6)) return "This hex is taken"; }
   if (!towerUnlocked(k)) return "Not researched yet";
   if (B.scrap < towerCost(k, x, y)) return "Not enough scrap";
   const dc = dist(x, y, CX, CY);
-  if (dc > BUILD_R) return "Outside the build radius";
+  if (dc > buildR()) return "Outside the build radius";
   if (dc < CORE_R + d.r + 6) return "Too close to the citadel";
   for (const t of B.towers) if (dist(x, y, t.x, t.y) < (k === "barricade" && t.type === "barricade" ? Math.round(30 * SZ) : t.r + d.r + 3)) return "Blocked by a structure";
   if (propAt(x, y, d.r + 3)) return "Blocked by an obstacle. Shoot it down first";
@@ -1611,10 +1624,10 @@ boom = cosmetic(boom); burst = cosmetic(burst); dmgText = cosmetic(dmgText);
    You see the build area plus a 5-hex margin around it, and whatever your Auspex arrays scan.
    Enemies in the fog can't be targeted. Part of the simulation, so every online player agrees. */
 function updateVision() {
-  const v = [{ x: CX, y: CY, r: VIS_R }];
+  const v = [{ x: CX, y: CY, r: visR() }];
   for (const t of B.towers) if (t.type === "auspex" && t.built >= 1) v.push({ x: t.x, y: t.y, r: tStats(t).range });
   B.vis = v;
-  for (const e of B.enemies) { e.vis = false; for (const c of v) { const rr = c.r + e.r; if (dist2(e.x, e.y, c.x, c.y) <= rr * rr) { e.vis = true; break; } } }
+  for (const e of B.enemies) { e.vis = false; for (const c of v) { if (dist2(e.x, e.y, c.x, c.y) <= c.r * c.r) { e.vis = true; break; } } }
 }
 function visibleAt(x, y) { for (const c of B.vis || []) if (dist2(x, y, c.x, c.y) <= c.r * c.r) return true; return !B.vis; }
 
@@ -1668,7 +1681,7 @@ function step(dt) {
   if (m.coreRegen) core.hp = Math.min(core.max, core.hp + core.max * m.coreRegen * dt);
 
   // core weapons (one per player; co-op ready)
-  for (const p of B.players) updatePlayer(p, dt);
+  // (the citadel gun was removed; B.players only tracks the commanders and their purses)
 
   // Second Sun
   if (m.sun && B.state === "wave") {
@@ -2290,7 +2303,7 @@ function unitWeapon(w, m, tg, dmg, o, u) {
     }
     case "annihilator": { const T = dist(m.x, m.y, tg.x, tg.y) / 520; B.shells.push({ x: m.x, y: m.y, tx: tg.x, ty: tg.y, t: 0, T, r: w.splash, dmg, o: Object.assign({ plasma: true, burn: dmg * 0.02 }, o), plasma: true, flat: true }); B.shake = Math.max(B.shake, 5); sfx("plasma", m.x, 1); break; }
     case "bombard": { B.shells.push({ x: m.x, y: m.y, tx: tg.x + rnd(-20, 20), ty: tg.y + rnd(-20, 20), t: 0, T: 1.1, r: w.splash, dmg, o: Object.assign({}, o), big: true, label: null }); sfx("thump", m.x, 0.8); break; }
-    case "missiles": case "torpedo": { const opts = B.enemies.filter(e => !e.dead && dist2(m.x, m.y, e.x, e.y) < w.range * w.range); for (let k = 0; k < (w.salvo || 1); k++) { const e = pick(opts) || tg, a = Math.atan2(e.y - m.y, e.x - m.x) + rnd(-0.9, 0.9); B.projs.push({ x: m.x + rnd(-6, 6), y: m.y + rnd(-6, 6), vx: Math.cos(a) * 360, vy: Math.sin(a) * 360, life: 3, dmg, r: 4, splash: w.splash, pierce: 0, hits: [], homing: true, turn: 5, tg: e, o: Object.assign({ explosive: true }, o), style: "missile", col: "#ffe9a8" }); } sfx("missile", m.x, 0.8); break; }
+    case "missiles": case "torpedo": { const opts = B.enemies.filter(e => !e.dead && e.vis !== false && dist2(m.x, m.y, e.x, e.y) < w.range * w.range); for (let k = 0; k < (w.salvo || 1); k++) { const e = pick(opts) || tg, a = Math.atan2(e.y - m.y, e.x - m.x) + rnd(-0.9, 0.9); B.projs.push({ x: m.x + rnd(-6, 6), y: m.y + rnd(-6, 6), vx: Math.cos(a) * 360, vy: Math.sin(a) * 360, life: 3, dmg, r: 4, splash: w.splash, pierce: 0, hits: [], homing: true, turn: 5, tg: e, o: Object.assign({ explosive: true }, o), style: "missile", col: "#ffe9a8" }); } sfx("missile", m.x, 0.8); break; }
   }
 }
 // warships circle the battlefield in low orbit and attack whatever is beneath their guns
@@ -2401,7 +2414,7 @@ function canMoveTo(t, x, y) {
   { const h = hexSnap(x, y); x = h.x; y = h.y; if (B.towers.some(o => o !== t && Math.abs(o.x - x) < 6 && Math.abs(o.y - y) < 6)) return "This hex is taken"; }
   if (B.scrap < moveCost(t)) return "Not enough scrap";
   const dc = dist(x, y, CX, CY);
-  if (dc > BUILD_R) return "Outside the build radius";
+  if (dc > buildR()) return "Outside the build radius";
   if (dc < CORE_R + d.r + 6) return "Too close to the citadel";
   for (const o of B.towers) if (o !== t && dist(x, y, o.x, o.y) < (t.type === "barricade" && o.type === "barricade" ? 30 : o.r + d.r + 3)) return "Blocked by a structure";
   if (propAt(x, y, d.r + 3)) return "Blocked by an obstacle";
@@ -2895,8 +2908,8 @@ function buildBG(era) {
   g.strokeStyle = "rgba(209,165,76,.45)"; g.lineWidth = 2; g.beginPath(); g.arc(CX, CY, 177, 0, 7); g.stroke();
   g.strokeStyle = "rgba(209,165,76,.18)"; g.lineWidth = 1; g.beginPath(); g.arc(CX, CY, 182, 0, 7); g.stroke();
   // earthwork along the build ring
-  g.strokeStyle = "rgba(0,0,0,.25)"; g.lineWidth = 10; g.beginPath(); g.arc(CX, CY, BUILD_R + 6, 0, 7); g.stroke();
-  g.strokeStyle = "rgba(255,230,200,.05)"; g.lineWidth = 3; g.beginPath(); g.arc(CX, CY, BUILD_R + 1, 0, 7); g.stroke();
+  g.strokeStyle = "rgba(0,0,0,.25)"; g.lineWidth = 10; g.beginPath(); g.arc(CX, CY, buildR() + 6, 0, 7); g.stroke();
+  g.strokeStyle = "rgba(255,230,200,.05)"; g.lineWidth = 3; g.beginPath(); g.arc(CX, CY, buildR() + 1, 0, 7); g.stroke();
   return c;
 }
 let VIGN = null, RVIGN = null, FOG = { era: -1, c: null };
@@ -3949,9 +3962,11 @@ function drawWallPost(g, t) {
 function hexPath(g, x, y, R) { g.beginPath(); for (let i = 0; i < 6; i++) { const a = Math.PI / 6 + i * Math.PI / 3, px = x + Math.cos(a) * R, py = y + Math.sin(a) * R * 0.82; i ? g.lineTo(px, py) : g.moveTo(px, py); } g.closePath(); }
 let HEXC = null;
 function hexLayer() {
-  if (HEXC) return HEXC;
-  const S = BUILD_R + 40; HEXC = document.createElement("canvas"); HEXC.width = S * 2; HEXC.height = S * 2; HEXC.ox = CX - S; HEXC.oy = CY - S; const g = HEXC.getContext("2d"); g.translate(-HEXC.ox, -HEXC.oy);
-  for (const c of HEX_CELLS) { hexPath(g, c.x, c.y, HEX_R - 1.5); g.fillStyle = "rgba(0,0,0,.10)"; g.fill(); g.strokeStyle = "rgba(209,165,76,.55)"; g.lineWidth = 1; g.stroke(); }
+  const br = buildR();
+  if (HEXC && HEXC.br === br) return HEXC;
+  const S = br + 40; HEXC = document.createElement("canvas"); HEXC.width = S * 2; HEXC.height = S * 2; HEXC.ox = CX - S; HEXC.oy = CY - S; const g = HEXC.getContext("2d"); g.translate(-HEXC.ox, -HEXC.oy);
+  HEXC.br = br;
+  for (const c of HEX_CELLS) { if (c.d > br - 8) continue; hexPath(g, c.x, c.y, HEX_R - 1.5); g.fillStyle = "rgba(0,0,0,.10)"; g.fill(); g.strokeStyle = "rgba(209,165,76,.55)"; g.lineWidth = 1; g.stroke(); }
   return HEXC;
 }
 // each building's category, shown on its pad: weapons red, support blue, economy gold, forces violet
@@ -4391,12 +4406,12 @@ function render() {
   if (B.kick && B.kick.t > 0) { const k = B.kick.t / 0.08 * 2.2 * SETTINGS.shake; kx = -Math.cos(B.kick.a) * k; ky = -Math.sin(B.kick.a) * k; B.kick.t -= rdt; }
   g.setTransform(VIEW.s * VIEW.dpr, 0, 0, VIEW.s * VIEW.dpr, (VIEW.ox + (rnd(-sk, sk) + kx) * VIEW.s) * VIEW.dpr, (VIEW.oy + (rnd(-sk, sk) + ky) * VIEW.s) * VIEW.dpr);
   g.save(); g.beginPath(); g.rect(0, 0, W, H); g.clip();
-  if (bgCache.era !== B.era) bgCache = { era: B.era, c: buildBG(B.era) };
+  if (bgCache.era !== B.era || bgCache.br !== buildR()) bgCache = { era: B.era, br: buildR(), c: buildBG(B.era) };
   g.drawImage(bgCache.c, 0, 0);
   g.drawImage(roadLayer(B.era), 0, 0);
   g.drawImage(decals(), 0, 0);
 
-  if (B.build) { g.setLineDash([8, 10]); g.lineWidth = 2; g.strokeStyle = "rgba(209,165,76,.6)"; g.beginPath(); g.arc(CX, CY, BUILD_R, 0, 7); g.stroke(); g.setLineDash([]); }
+  if (B.build) { g.setLineDash([8, 10]); g.lineWidth = 2; g.strokeStyle = "rgba(209,165,76,.6)"; g.beginPath(); g.arc(CX, CY, buildR(), 0, 7); g.stroke(); g.setLineDash([]); }
 
   // ore veins: glowing crystal clusters
   for (const o of B.deposits) {
@@ -4781,10 +4796,8 @@ function drawCore(g, time) {
   const want = hiveHovered() ? 0.22 : 1, cur = B.hiveA == null ? 1 : B.hiveA;
   B.hiveA = cur + (want - cur) * 0.18; if (Math.abs(B.hiveA - want) < 0.01) B.hiveA = want;
   drawHive(g, time, false);
-  const guns = B.players.slice().sort((a, b) => a.sy - b.sy);
-  for (const p of guns) drawCitadelGun(g, time, p);
   drawHive(g, time, true);
-  if (B.wallet) for (const p of B.players) {
+  if (false) for (const p of B.players) {
     // commander banner over each gun; the active commander's is lit
     const act = p.id === (NET.on ? NET.me : B.cmd), x = p.sx, y = p.sy - 26 - 22 * p.gs;
     g.font = "700 " + (act ? 15 : 12) + "px Cinzel, Georgia, serif"; g.textAlign = "center"; g.lineWidth = 3; g.strokeStyle = "rgba(0,0,0,.85)";
@@ -4850,7 +4863,7 @@ function drawTreeIcon(c, id) {
 // a low-resolution darkness mask over the whole map with soft holes for the citadel's sight and each Auspex
 const FOGW = { key: "", c: null, sc: 8 };
 function drawFog(g, time) {
-  const vis = B.vis || [{ x: CX, y: CY, r: VIS_R }];
+  const vis = B.vis || [{ x: CX, y: CY, r: visR() }];
   const key = vis.map(v => Math.round(v.x) + "," + Math.round(v.y) + "," + Math.round(v.r)).join("|");
   if (FOGW.key !== key || !FOGW.c) {
     const k = FOGW.sc, m = 400, c = FOGW.c || document.createElement("canvas"); c.width = Math.ceil((W + m * 2) / k); c.height = Math.ceil((H + m * 2) / k);
@@ -4858,15 +4871,15 @@ function drawFog(g, time) {
     f.fillStyle = "rgba(6,5,5,.9)"; f.fillRect(0, 0, c.width, c.height);
     f.globalCompositeOperation = "destination-out";
     for (const v of vis) {
-      const x = (v.x + m) / k, y = (v.y + m) / k, r = v.r / k, gr = f.createRadialGradient(x, y, Math.max(0, r - 70 / k), x, y, r + 10 / k);
-      gr.addColorStop(0, "rgba(0,0,0,1)"); gr.addColorStop(1, "rgba(0,0,0,0)"); f.fillStyle = gr; f.beginPath(); f.arc(x, y, r + 10 / k, 0, TAU); f.fill();
+      const x = (v.x + m) / k, y = (v.y + m) / k, r = v.r / k, gr = f.createRadialGradient(x, y, r, x, y, r + 55 / k);
+      gr.addColorStop(0, "rgba(0,0,0,1)"); gr.addColorStop(1, "rgba(0,0,0,0)"); f.fillStyle = gr; f.beginPath(); f.arc(x, y, r + 55 / k, 0, TAU); f.fill();
     }
     f.globalCompositeOperation = "source-over"; FOGW.c = c; FOGW.key = key; FOGW.m = m;
   }
   g.drawImage(FOGW.c, -FOGW.m, -FOGW.m, W + FOGW.m * 2, H + FOGW.m * 2);
   // drifting wisps along the edge of sight
   g.save(); g.globalAlpha = 0.07; g.strokeStyle = "#9a9080"; g.lineWidth = 30;
-  for (let i = 0; i < 3; i++) { g.beginPath(); g.arc(CX, CY, VIS_R + 30 + i * 40, time * 0.02 * (i % 2 ? 1 : -1) + i, time * 0.02 * (i % 2 ? 1 : -1) + i + 2.2); g.stroke(); }
+  for (let i = 0; i < 3; i++) { g.beginPath(); g.arc(CX, CY, visR() + 60 + i * 40, time * 0.02 * (i % 2 ? 1 : -1) + i, time * 0.02 * (i % 2 ? 1 : -1) + i + 2.2); g.stroke(); }
   g.restore();
 }
 /* ============================================================
@@ -4934,11 +4947,21 @@ function panner(x) {
 /* ---------- sound effects ---------- */
 // gap: minimum seconds between two plays of the same sound; cost: rough voice weight
 const SFX = {
-  shot:    { gap: 0.05, f(t, o, v) { noise(t, 0.06, o, 0.22 * v, "bandpass", 2200, 900, 1.2); osc("square", 180, 60, t, 0.06, o, 0.05 * v); } },
+  // bolt round: heavy crack of the propellant, a deep THUD and the clack of the action
+  shot:    { gap: 0.05, f(t, o, v) { noise(t, 0.05, o, 0.28 * v, "bandpass", 1800, 600, 1.1); osc("sine", 150, 42, t, 0.16, o, 0.42 * v); osc("square", 95, 38, t, 0.06, o, 0.07 * v); noise(t + 0.012, 0.11, o, 0.16 * v, "lowpass", 700, 140); noise(t + 0.05, 0.015, o, 0.06 * v, "highpass", 3500, 3500); } },
   rifle:   { gap: 0.07, f(t, o, v) { noise(t, 0.12, o, 0.3 * v, "bandpass", 3200, 1200, 1.5); osc("sine", 140, 45, t, 0.12, o, 0.2 * v); } },
   cannon:  { gap: 0.06, f(t, o, v) { noise(t, 0.18, o, 0.35 * v, "lowpass", 2400, 300, 1); osc("sine", 120, 38, t, 0.22, o, 0.45 * v); osc("square", 70, 40, t, 0.08, o, 0.06 * v); } },
-  boom:    { gap: 0.07, f(t, o, v) { noise(t, 0.55, o, 0.5 * v, "lowpass", 1400, 90, 0.9); osc("sine", 75, 28, t, 0.45, o, 0.6 * v); noise(t, 0.08, o, 0.25 * v, "highpass", 3000, 3000); } },
-  bigboom: { gap: 0.15, f(t, o, v) { noise(t, 1.1, o, 0.65 * v, "lowpass", 1800, 60, 0.8); osc("sine", 60, 22, t, 0.9, o, 0.8 * v); osc("sawtooth", 45, 25, t, 0.5, o, 0.08 * v); noise(t, 0.12, o, 0.3 * v, "highpass", 2500, 2500); } },
+  // explosion: sharp crack, a blast of air that darkens as it rolls, a sub-bass punch, rumble and falling debris
+  boom:    { gap: 0.07, f(t, o, v) {
+    noise(t, 0.04, o, 0.45 * v, "highpass", 1800, 600); noise(t, 0.7, o, 0.7 * v, "lowpass", 3200, 110, 0.7, 0.004);
+    osc("sine", 68, 26, t, 0.55, o, 0.75 * v); osc("triangle", 44, 24, t + 0.02, 0.6, o, 0.18 * v);
+    noise(t + 0.15, 1.1, o, 0.22 * v, "lowpass", 380, 60, 0.6, 0.08);
+    for (let i = 0; i < 4; i++) noise(t + 0.18 + Math.random() * 0.5, 0.025, o, 0.05 * v, "bandpass", 2400 + Math.random() * 1800, 1600, 2); } },
+  bigboom: { gap: 0.15, f(t, o, v) {
+    noise(t, 0.06, o, 0.55 * v, "highpass", 1500, 400); noise(t, 1.3, o, 0.9 * v, "lowpass", 3000, 70, 0.7, 0.006);
+    osc("sine", 52, 20, t, 1.1, o, 0.95 * v); osc("sawtooth", 38, 20, t, 0.7, o, 0.08 * v);
+    noise(t + 0.25, 2.2, o, 0.3 * v, "lowpass", 300, 40, 0.6, 0.15);
+    for (let i = 0; i < 7; i++) noise(t + 0.3 + Math.random() * 1.1, 0.03, o, 0.06 * v, "bandpass", 2000 + Math.random() * 2500, 1400, 2); } },
   zap:     { gap: 0.06, f(t, o, v) { osc("sawtooth", 1600 + Math.random() * 400, 180, t, 0.12, o, 0.08 * v); noise(t, 0.1, o, 0.14 * v, "highpass", 4000, 2000, 2); osc("square", 90, 60, t, 0.1, o, 0.04 * v); } },
   thump:   { gap: 0.06, f(t, o, v) { osc("sine", 110, 40, t, 0.2, o, 0.4 * v); noise(t, 0.16, o, 0.18 * v, "lowpass", 900, 200); } },
   missile: { gap: 0.08, f(t, o, v) { noise(t, 0.35, o, 0.16 * v, "bandpass", 600, 2600, 2.5, 0.03); osc("sine", 70, 50, t, 0.08, o, 0.15 * v); } },
@@ -5148,6 +5171,7 @@ function affordableResearch(tithe) { const era = eraOf(RUN.col + 1); return RESE
 // shared-screen co-op: any commander's purse counts; online: your own
 function spendTithe() { return RUN.coop && !NET.on ? Math.max(...RUN.coop.map(c => c.tithe)) : RUN.tithe; }
 function skillAvail() {
+  return false; // the citadel gun and its Core Shrine were removed
   if (!(RUN.skillPts > 0)) return false;
   const cores = RUN.coop && !NET.on ? RUN.coop.map(c => c.core) : [myCore()];
   return cores.some(k => CORES[k].skills.some(s => !RUN.skills[s.id] && !(s.req && !RUN.skills[s.req])));
@@ -5181,7 +5205,7 @@ const UI = {
   cmdChips(rerender, battle) {
     if (!RUN || !RUN.coop) return "";
     const cur = NET.on ? NET.me : battle ? B.cmd : RUN.cmd;
-    return `<span class="row cmdchips" role="radiogroup" aria-label="Active commander">${RUN.coop.map((c, i) => `<button class="cmdchip ${i === cur ? "act" : ""}" data-cmd="${i}" style="--cc:${COOP_COL[i]}" title="Commander ${COOP_NUM[i]} (${CORES[c.core].name})${battle ? (i === cur ? ". In command" : ". Click to take command · Shift- or right-click to give them 25 scrap (G gives 25 to the next commander)") : ". Click to spend this commander's Tithe"}"><b>${COOP_NUM[i]}</b> ${NET.on && c.name ? esc(c.name.slice(0, 10)) : CORES[c.core].name.split(" ")[0]}${NET.on && NET.isOff && NET.isOff(i) ? " (away)" : ""} <span class="num">${fmt(battle ? B.wallet[i] : c.tithe)}</span></button>`).join("")}</span>`;
+    return `<span class="row cmdchips" role="radiogroup" aria-label="Active commander">${RUN.coop.map((c, i) => `<button class="cmdchip ${i === cur ? "act" : ""}" data-cmd="${i}" style="--cc:${COOP_COL[i]}" title="Commander ${COOP_NUM[i]}${battle ? (i === cur ? ". In command" : ". Click to take command · Shift- or right-click to give them 25 scrap (G gives 25 to the next commander)") : ". Click to spend this commander's Tithe"}"><b>${COOP_NUM[i]}</b> ${NET.on && c.name ? esc(c.name.slice(0, 10)) : "Commander"}${NET.on && NET.isOff && NET.isOff(i) ? " (away)" : ""} <span class="num">${fmt(battle ? B.wallet[i] : c.tithe)}</span></button>`).join("")}</span>`;
   },
   bindCmd(rerender, battle) {
     document.querySelectorAll("[data-cmd]").forEach(b => {
@@ -5216,16 +5240,13 @@ const UI = {
     const legacy = LEGACY.map(l => { const r = rank(l.id), max = r >= l.max; return `<button class="card ${max ? "sel" : ""}" data-leg="${l.id}" ${max || META.legacy < l.cost ? "disabled" : ""}><span class="spread"><h3>${l.name}</h3><span class="tag">${r}/${l.max}</span></span><span class="small">${l.desc}</span><span class="small">${max ? "Complete" : "Cost " + l.cost + " Legacy"}</span></button>`; }).join("");
     UI.show(`<div class="wrap">
       <div><div class="eyebrow">A citadel defence across four ages</div><h1 class="title">Ages of the Crown</h1></div>
-      <p>The God-Crown's last citadel stands alone. Aim its great gun yourself, raise towers around it, and march a campaign through the Ages of Iron, Powder, Brass and the Void. Every wave you survive earns a blessing. Every tyrant you kill moves history forward.</p>
-      ${RUN ? `<div class="panel spread"><div><h3>Campaign in progress</h3><span class="small">${RUN.coop ? RUN.coop.length + " commanders: " + RUN.coop.map(c => CORES[c.core].name).join(", ") : CORES[RUN.core].name} · ${TOWERS[startTower()].name} · ${DIFFS[RUN.diff].name} · ${ERAS[eraOf(RUN.col + 1)].name} · ${RUN.battles} battles won</span></div><div class="row"><button class="primary" id="b-cont">Continue</button><button class="danger" id="b-abandon">Abandon</button></div></div>` : ""}
+      <p>The God-Crown's last citadel stands alone. Raise towers around it, and march a campaign through the Ages of Iron, Powder, Brass and the Void. Every wave you survive earns a blessing. Every tyrant you kill moves history forward.</p>
+      ${RUN ? `<div class="panel spread"><div><h3>Campaign in progress</h3><span class="small">${RUN.coop ? RUN.coop.length + " commanders" : "Solo"} · ${TOWERS[startTower()].name} · ${DIFFS[RUN.diff].name} · ${ERAS[eraOf(RUN.col + 1)].name} · ${RUN.battles} battles won</span></div><div class="row"><button class="primary" id="b-cont">Continue</button><button class="danger" id="b-abandon">Abandon</button></div></div>` : ""}
       <div class="panel" style="display:flex;flex-direction:column;gap:14px">
         <h2>New campaign</h2>
         <div class="eyebrow">Commanders</div>
         <div class="row" role="radiogroup" aria-label="Number of commanders">${[1, 2, 3, 4].map(n => `<button class="qbtn ${S.n === n ? "primary" : ""}" data-n="${n}">${n === 1 ? "Solo" : n + " commanders"}</button>`).join("")}</div>
-        ${coop ? `<span class="small">Co-op on one screen. Every commander mans their own citadel gun and keeps their own purse of scrap and Tithe; all income is split evenly. Towers, upgrades, research and skills are shared, and anyone can build or upgrade anything. After each wave every commander picks their own blessing at 1/3 strength. Press <span class="kbd">C</span> or click a commander's banner to take the controls.</span>` : ""}
-        <div class="eyebrow">${coop ? "Citadel guns" : "Core weapon"}</div>
-        ${coop ? `<div class="row" role="radiogroup" aria-label="Commander choosing a gun">${S.cores.slice(0, S.n).map((k, i) => `<button class="cmdchip ${UI.setupWho === i ? "act" : ""}" data-who="${i}" style="--cc:${COOP_COL[i]}"><b>${COOP_NUM[i]}</b> ${CORES[k].name}</button>`).join("")}<span class="small">Pick a commander, then a gun below.</span></div>` : ""}
-        <div class="grid">${cores}</div>
+        ${coop ? `<span class="small">Co-op on one screen. Every commander keeps their own purse of scrap and Tithe; all income is split evenly, including the 300 extra starting scrap. Towers, upgrades and research are shared, and anyone can build or upgrade anything. After each wave every commander picks their own blessing at 1/3 strength. Press <span class="kbd">C</span> or click a commander's banner to take the controls.</span>` : ""}
         <div class="eyebrow">Starting weapon tower</div><div class="grid">${starts}</div>
         <span class="small">The other weapon towers are unlocked through research at the War Council.</span>
         <div class="eyebrow">Difficulty</div><div class="grid">${diffs}</div>
@@ -5244,7 +5265,7 @@ const UI = {
     document.querySelectorAll("[data-leg]").forEach(b => b.onclick = () => { const l = LEGACY.find(x => x.id === b.dataset.leg); if (META.legacy >= l.cost && rank(l.id) < l.max) { META.legacy -= l.cost; META.ranks[l.id] = rank(l.id) + 1; saveMeta(); UI.title(); } });
     $("b-new").onclick = () => {
       if (RUN && !UI.confirmNew) { UI.confirmNew = true; $("b-new").textContent = "Click again to replace your campaign"; return; }
-      UI.confirmNew = false; audio(); newRun(coop ? S.cores[0] : S.core, S.diff, S.start, coop ? S.cores.slice(0, S.n) : null); UI.map();
+      UI.confirmNew = false; audio(); newRun("bastion", S.diff, S.start, coop ? Array(S.n).fill("bastion") : null); UI.map();
     };
     $("b-how").onclick = () => UI.howto();
     $("b-set").onclick = () => UI.settings();
@@ -5285,16 +5306,14 @@ const UI = {
       <div class="grid">
         <div><h3>Battle controls</h3><ul class="list small">
           <li>Your citadel gun fires on its own at its favoured target (Bastion: healthiest, Lance: closest, Hymn: furthest)</li>
-          <li><span class="kbd">Left mouse</span> hold to take manual aim instead</li>
-          <li><span class="kbd">Right mouse</span> or <span class="kbd">E</span> core special</li>
-          <li><span class="kbd">Q</span> Bulwark: 3s invulnerable citadel</li>
+          <li><span class="kbd">Right mouse</span> or <span class="kbd">Esc</span> cancel building, moving or a selection</li>
           <li><span class="kbd">1</span>–<span class="kbd">9</span> pick a tower, click to place, right-click to stop</li>
           <li>Click a tower to upgrade, repair or sell it. <span class="kbd">U</span> upgrade · <span class="kbd">R</span> repair · <span class="kbd">X</span> sell</li>
           <li><span class="kbd">Mouse wheel</span> or <span class="kbd">+</span>/<span class="kbd">−</span> zoom · <span class="kbd">WASD</span>, arrows or middle-drag to pan · <span class="kbd">0</span> show the whole field</li>
           <li>Barricades: click to place one, or drag a line to raise a whole wall. Barricades next to each other lock together into one wall that enemies must break through.</li>
           <li><span class="kbd">Shift</span>-click towers of the same type to select them together and upgrade, repair or sell them in one go. Double-click a tower to select every tower of its type.</li>
           <li>Select a tower and press <span class="kbd">M</span> (or Move) to relocate it for 10% of what it cost. Ore-vein buildings can't move.</li>
-          <li>Co-op: <span class="kbd">C</span> or a commander's banner in the top bar passes the controls (aim, abilities, purse) to the next commander. <span class="kbd">G</span>, or Shift/right-click a banner, gives 25 scrap to another commander. Guns of the other commanders keep firing on their own.</li>
+          <li>Co-op: <span class="kbd">C</span> or a commander's banner in the top bar passes the controls (building and the purse) to the next commander. <span class="kbd">G</span>, or Shift/right-click a banner, gives 25 scrap to another commander. Guns of the other commanders keep firing on their own.</li>
           <li>Fog of war: you only see your build area and a margin around it. Enemies march in from beyond the edge of the map; arrows on the screen edge show where each wave comes from. Build an <b>Auspex Array</b> (Support) to see and shoot further into the fog.</li>
           <li><span class="kbd">N</span> call the next wave early · <span class="kbd">F</span> speed · <span class="kbd">P</span> pause</li></ul></div>
         <div><h3>The loop</h3><ul class="list small">
@@ -5344,13 +5363,12 @@ const UI = {
     const repairCostT = 35, hpPct = Math.round(RUN.hpFrac * 100);
     UI.show(`<div class="wrap">
       <div class="spread"><div><div class="eyebrow">${ERAS[era].name} · facing ${ERAS[era].foe}</div><h2>The War Table</h2></div>
-        <div class="row"><button id="b-council">War Council</button><button id="b-skills">Core Shrine${RUN.skillPts ? ` (${RUN.skillPts})` : ""}</button><button id="b-help">How to play</button><button id="b-set">Settings</button><button id="b-menu">Menu</button></div></div>
+        <div class="row"><button id="b-council">War Council</button><button id="b-help">How to play</button><button id="b-set">Settings</button><button id="b-menu">Menu</button></div></div>
       <div class="panel row" style="gap:22px">
         ${RUN.coop ? `<span class="stat">Tithe</span>${UI.cmdChips()}` : `<span class="stat">Tithe <b class="num">${fmt(RUN.tithe)}</b></span>`}
         <span class="stat">Citadel <b class="num">${hpPct}%</b> <span class="small num">of ${fmt(maxHP)}</span></span>
         <span class="stat">Holdings <b class="num">${RUN.holdings}</b></span>
         <span class="stat">Wrath <b class="num" style="color:${RUN.wrath >= 6 ? "#e36a6a" : "var(--gilt)"}">${RUN.wrath}/6</b></span>
-        <span class="stat">Core level <b class="num">${RUN.level}</b> <span class="small num">${RUN.xp}/${RUN.level * 100} xp</span></span>
         <button id="b-repair" ${RUN.hpFrac >= 1 || RUN.tithe < repairCostT ? "disabled" : ""}>Repair 10% · ${repairCostT} Tithe</button>
       </div>
       ${RUN.wrath >= 6 ? `<div class="panel"><h3 style="color:#e36a6a">The enemy is counterattacking</h3><p class="small">Your next battle has more enemies and attacks from an extra direction, and pays 50% more Tithe.</p></div>` : ""}
@@ -5362,7 +5380,6 @@ const UI = {
     // scroll map to current column
     const mw = $("mapwrap"); mw.scrollLeft = Math.max(0, (RUN.col) * colW - 120);
     $("b-council").onclick = () => UI.council();
-    $("b-skills").onclick = () => UI.skills();
     UI.nudgeButtons();
     UI.bindCmd(() => UI.map());
     $("b-help").onclick = () => UI.howto();
@@ -5404,7 +5421,7 @@ const UI = {
     saveRun();
     UI.show(`<div class="wrap">
       <div class="spread"><div><div class="eyebrow">Beyond the four ages · facing ${ERAS[4].foe}</div><h1 class="title" style="font-size:clamp(40px,7vw,72px)">Age of Eternal War</h1></div>
-        <div class="row"><button id="b-council">War Council</button><button id="b-skills">Core Shrine${RUN.skillPts ? ` (${RUN.skillPts})` : ""}</button><button id="b-set">Settings</button><button id="b-menu">Menu</button></div></div>
+        <div class="row"><button id="b-council">War Council</button><button id="b-set">Settings</button><button id="b-menu">Menu</button></div></div>
       <p>The Hollow Star is dead, but the war never ends. Each battle here is harder than the last. Hold as long as you can: your score is every enemy slain plus a bonus for every battle won.</p>
       <div class="panel row" style="gap:22px">
         <span class="stat">Eternal battle <b class="num">${n}</b></span>
@@ -5419,7 +5436,7 @@ const UI = {
         ${NET.client ? `<span class="small" style="color:var(--gilt)">The host leads the march</span>` : `<button class="primary" id="b-go">March</button>`}</div>
       <div class="panel"><h3>Relics</h3>${RUN.relics.length ? `<ul class="list small">${RUN.relics.map(id => { const r = RELICS.find(x => x.id === id); return `<li><b>${r.name}</b> — ${r.desc}</li>`; }).join("")}</ul>` : `<p class="small">None.</p>`}</div>
     </div>`);
-    $("b-council").onclick = () => UI.council(); $("b-skills").onclick = () => UI.skills(); $("b-set").onclick = () => UI.settings(); $("b-menu").onclick = () => UI.title();
+    $("b-council").onclick = () => UI.council(); $("b-set").onclick = () => UI.settings(); $("b-menu").onclick = () => UI.title();
     $("b-repair").onclick = () => { if (RUN.tithe >= repairCostT) { runAct("repair", 0.15, repairCostT); UI.endless(); } };
     UI.bindCmd(() => UI.endless());
     if ($("b-go")) $("b-go").onclick = () => { sfx("click"); UI.confirmMarch(() => UI.enterBattle(col, 0)); };
@@ -5630,11 +5647,8 @@ const UI = {
     $("h-snd").onclick = () => { SETTINGS.muted = !SETTINGS.muted; saveSettings(); audio(); applyVolumes(); UI.hud(true); };
     $("h-pause").onclick = () => UI.pause();
     $("h-zin").onclick = () => zoomAt(1.25); $("h-zout").onclick = () => zoomAt(1 / 1.25); $("h-zfit").onclick = () => resetCam();
-    const P = actP(), lance = P.core === "lance"; UI.hudCmd = B.cmd;
-    $("abil").innerHTML = `${B.wallet ? `<div class="ab" id="a-cmd" style="color:${COOP_COL[P.id]}" title="Press C to hand the controls to the next commander">Commander ${COOP_NUM[P.id]} · ${CORES[P.core].name}</div>` : ""}<div class="ab" title="Your hero fires on its own. Hold left mouse to take manual aim.">Targets: ${CORES[P.core].targetLabel}</div><button class="ab" id="a-sp"><span></span><i></i></button><button class="ab" id="a-q"><span></span><i></i></button>
-      ${lance ? `<div class="ab" id="a-heat"><span></span><i></i></div>` : ""}<div class="ab small" id="a-perks" style="font-family:var(--f-body)" hidden></div>`;
-    $("a-sp").onclick = () => IN.special();
-    $("a-q").onclick = () => IN.ability();
+    const P = actP(); UI.hudCmd = B.cmd;
+    $("abil").innerHTML = `${B.wallet ? `<div class="ab" id="a-cmd" style="color:${COOP_COL[P.id]}" title="${NET.on ? "You" : "Press C to hand the controls to the next commander"}">Commander ${COOP_NUM[P.id]}${NET.on && RUN.coop[P.id] && RUN.coop[P.id].name ? " · " + esc(RUN.coop[P.id].name) : ""}</div>` : ""}<div class="ab small" id="a-perks" style="font-family:var(--f-body)" hidden></div>`;
   },
   hud(force) {
     if (!B) return;
@@ -5651,13 +5665,6 @@ const UI = {
     $("t-era").textContent = ERAS[B.era].name + (B.mod ? " · " + MODIFIERS.find(m => m.id === B.mod).name : "") + (B.counter ? " · Counterattack" : "");
     $("h-speed").textContent = B.speed + "x";
     $("h-snd").textContent = SETTINGS.muted ? "Sound off" : "Sound on";
-    const cd = CORES[p.core];
-    const spMax = (p.core === "lance" || p.core === "pyre" ? 14 : 12) * B.mods.coreCD, qMax = 30 * B.mods.coreCD;
-    $("a-sp").firstChild.textContent = cd.special.replace(/ \(.*/, "") + (p.spCd > 0 ? " " + Math.ceil(p.spCd) + "s" : " · ready");
-    $("a-sp").lastChild.style.width = (1 - Math.max(0, p.spCd) / spMax) * 100 + "%";
-    $("a-q").firstChild.textContent = "Bulwark (Q)" + (p.qCd > 0 ? " " + Math.ceil(p.qCd) + "s" : " · ready");
-    $("a-q").lastChild.style.width = (1 - Math.max(0, p.qCd) / qMax) * 100 + "%";
-    if ($("a-heat")) { $("a-heat").firstChild.textContent = p.over > 0 ? "OVERHEATED" : "Heat"; const i = $("a-heat").lastChild; i.style.width = p.heat + "%"; i.style.background = p.over > 0 ? "#e36a6a" : "#c9a8ff"; }
     const pk = $("a-perks"); pk.hidden = !B.perks.length; pk.textContent = B.pperks ? B.pperks.map((l, i) => l.length ? COOP_NUM[i] + ": " + l.map(id => PERKS.find(x => x.id === id).name).join(", ") : "").filter(Boolean).join(" · ") : B.perks.map(id => PERKS.find(x => x.id === id).name).join(", ");
     document.querySelectorAll(".bbtn").forEach(b => { const k = b.dataset.b; if (towerUnlocked(k)) b.style.opacity = B.scrap >= towerCost(k) ? 1 : 0.55; b.classList.toggle("act", B.build === k); });
     const t = B.sel;
@@ -5762,7 +5769,7 @@ const UI = {
     }
     const draw = () => {
       const who = B.pickBy || 0, coop = !!B.wallet;
-      UI.modal(`<div class="spread"><div><div class="eyebrow">Wave ${B.wave} of ${B.waves} survived${coop ? ` · blessing ${who + 1} of ${B.players.length}` : ""}</div><h2${coop ? ` style="color:${COOP_COL[who]}"` : ""}>${coop ? `Commander ${COOP_NUM[who]} (${CORES[B.players[who].core].name}): choose a blessing` : "Choose a blessing"}</h2></div>${B.rerolls > 0 ? `<button id="p-re">Reroll (${B.rerolls})</button>` : ""}</div>
+      UI.modal(`<div class="spread"><div><div class="eyebrow">Wave ${B.wave} of ${B.waves} survived${coop ? ` · blessing ${who + 1} of ${B.players.length}` : ""}</div><h2${coop ? ` style="color:${COOP_COL[who]}"` : ""}>${coop ? `Commander ${COOP_NUM[who]}: choose a blessing` : "Choose a blessing"}</h2></div>${B.rerolls > 0 ? `<button id="p-re">Reroll (${B.rerolls})</button>` : ""}</div>
         <div class="grid">${B.picks.map(p => `<button class="card perk" data-p="${p.id}"><span class="rar rar-${p.r}">${p.r}</span><h3>${p.name}</h3><span class="small">${p.desc}</span></button>`).join("")}</div>
         <span class="small">Blessings last until the end of this battle.${coop ? " In co-op every blessing works at 1/3 strength (on/off blessings trigger a third as often or hit a third as hard); they stack across commanders." : ""}</span>`);
       document.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { if (takePerk(b.dataset.p, who)) { draw(); return; } UI.closeModal(); UI.buildBar(); UI.hud(true); });
@@ -5773,12 +5780,13 @@ const UI = {
 
   pause() {
     if (!B || B.state === "pick" || B.state === "won" || B.state === "lost") return;
-    if (!NET.on) B.paused = true;
+    if (NET.on) { if (!B.paused) NET.cmd("pause", [true]); } // online: pausing pauses everyone
+    else B.paused = true;
     UI.modal(`<div class="spread"><h2>Paused</h2><button class="primary" id="m-res">Resume</button></div>
       <div class="grid"><div><h3>Synergies</h3><ul class="list small">${COMBOS.map(c => `<li><b class="rar-legendary">${c[0]}</b> — ${c[1]}</li>`).join("")}</ul></div>
       <div><h3>Blessings this battle${B.wallet ? " (1/3 strength each)" : ""}</h3><ul class="list small">${B.perks.length ? (B.pperks ? B.pperks.flatMap((l, i) => l.map(id => [id, i])) : B.perks.map(id => [id, -1])).map(([id, i]) => { const p = PERKS.find(x => x.id === id); return `<li>${i >= 0 ? `<b style="color:${COOP_COL[i]}">${COOP_NUM[i]}</b> ` : ""}<b>${p.name}</b> — ${p.desc}</li>`; }).join("") : "<li>None yet</li>"}</ul></div></div>
-      <div class="row"><button id="m-how">Controls</button><button id="m-set">Settings</button>${NET.client ? `<button class="danger" id="m-ab">Leave the game</button>` : `<button class="danger" id="m-ab">${NET.on ? "End the campaign for everyone" : "Abandon campaign"}</button>`}</div>${NET.on ? `<span class="small">Online games don't pause; the battle keeps going while this menu is open.</span>` : ""}`);
-    $("m-res").onclick = () => { B.paused = false; UI.closeModal(); };
+      <div class="row"><button id="m-how">Controls</button><button id="m-set">Settings</button>${NET.client ? `<button class="danger" id="m-ab">Leave the game</button>` : `<button class="danger" id="m-ab">${NET.on ? "End the campaign for everyone" : "Abandon campaign"}</button>`}</div>${NET.on ? `<span class="small">${B.paused && B.pausedBy != null ? "Paused by " + esc((RUN.coop[B.pausedBy] || {}).name || "Commander " + COOP_NUM[B.pausedBy]) + ". " : ""}Pausing stops the battle for everyone; anyone can resume.</span>` : ""}`);
+    $("m-res").onclick = () => { if (NET.on) NET.cmd("pause", [false]); else B.paused = false; UI.closeModal(); };
     $("m-how").onclick = () => { UI.howto(); $("m-x").onclick = () => UI.pause(); };
     $("m-set").onclick = () => UI.settings(() => UI.pause());
     $("m-ab").onclick = () => { if (NET.client) { NET.leave(); return; } const pts = endRunLegacy(false); if (NET.on) NET.ended(); UI.closeModal(); UI.title(); showToastLegacy(pts); };
@@ -5796,7 +5804,7 @@ const UI = {
     const eraUp = B.type === "boss" && B.era < 3;
     const relicHTML = r.relicChoice && r.relicChoice.length ? `<h3>Claim a relic</h3><div class="grid">${r.relicChoice.map(x => `<button class="card" data-rel="${x.id}"><h3>${x.name}</h3><span class="small">${x.desc}</span></button>`).join("")}</div>` : "";
     UI.modal(`<div><div class="eyebrow">Victory</div><h2>${r.finalWin ? "The Hollow Star is extinguished" : B.type === "boss" ? bossDef(B.col, B.era).name + " is slain" : "The line holds"}</h2></div>
-      <div class="panel row" style="gap:22px"><span class="stat">Tithe <b class="num">+${r.tithe}</b>${RUN.coop ? ` <span class="small num">(${fmt(r.tithe / RUN.coop.length)} each)</span>` : ""}</span><span class="stat">Experience <b class="num">+${r.xp}</b></span><span class="stat">Kills <b class="num">${B.kills}</b></span>${RUN.skillPts ? `<span class="stat">Skill points <b class="num">${RUN.skillPts}</b></span>` : ""}</div>
+      <div class="panel row" style="gap:22px"><span class="stat">Tithe <b class="num">+${r.tithe}</b>${RUN.coop ? ` <span class="small num">(${fmt(r.tithe / RUN.coop.length)} each)</span>` : ""}</span><span class="stat">Kills <b class="num">${B.kills}</b></span></div>
       ${eraUp ? `<p>The ${ERAS[B.era + 1].name} dawns. New research is open at the War Council and your guns grow stronger.</p>` : ""}
       ${r.finalWin ? `<p>You carried the Crown through every age. Your campaign is complete.</p>` : ""}
       ${relicHTML}
@@ -5845,7 +5853,7 @@ cv.addEventListener("pointerdown", e => {
   if (!B) return; audio();
   const w = toWorld(e.clientX, e.clientY); mouseW = w; if (!NET.on) { const p = actP(); p.aimX = w.x; p.aimY = w.y; }
   if (e.button === 1) { e.preventDefault(); PAN.on = true; PAN.x = e.clientX; PAN.y = e.clientY; try { cv.setPointerCapture(e.pointerId); } catch (er) {} return; }
-  if (e.button === 2) { if (B.moving) { B.moving = null; return; } if (B.build) { B.build = null; UI.buildBar(); } else IN.special(); return; }
+  if (e.button === 2) { if (B.moving) { B.moving = null; return; } if (B.build) { B.build = null; UI.buildBar(); } return; }
   if (e.button !== 0) return;
   if (B.moving) { if (moveTower(B.moving, w.x, w.y)) B.moving = null; UI.hud(true); return; }
   if (B.build === "barricade") { B.wallDrag = { x: w.x, y: w.y }; try { cv.setPointerCapture(e.pointerId); } catch (er) {} return; }
@@ -5858,10 +5866,13 @@ cv.addEventListener("pointerdown", e => {
       if (G.includes(t)) { if (G.length > 1) { G.splice(G.indexOf(t), 1); if (B.sel === t) B.sel = G[0]; } } else G.push(t);
       B.group = G.length > 1 ? G : null; sfx("click"); UI.hud(true); return;
     }
-    if (e.detail === 2 && B.sel === t) { B.group = B.towers.filter(o => o.type === t.type); if (B.group.length < 2) B.group = null; sfx("click"); UI.hud(true); return; }
+    // double-click (two clicks on the same tower within 0.4s; pointer events don't report double-clicks reliably)
+    const now = performance.now(), dbl = UI.lastTap && UI.lastTap.t === t && now - UI.lastTap.at < 400; UI.lastTap = { t, at: now };
+    if (dbl && B.sel === t) { UI.lastTap = null; B.group = B.towers.filter(o => o.type === t.type); if (B.group.length < 2) B.group = null; sfx("click"); UI.hud(true); return; }
     B.sel = t; B.group = null; UI.hud(true); return;
   }
-  UI.myFiring = true; IN.fire(true, w.x, w.y);
+  // clicking empty ground clears the selection (the citadel gun that used to fire here is gone)
+  if (B.sel || B.group) { B.sel = null; B.group = null; UI.hud(true); }
   try { cv.setPointerCapture(e.pointerId); } catch (er) {}
 });
 const stopFire = () => { PAN.on = false; if (!B) return; if (NET.on) { if (UI.myFiring) IN.fire(false); } else for (const q of B.players) q.firing = false; UI.myFiring = false; };
@@ -5884,7 +5895,7 @@ window.addEventListener("keydown", e => {
   const k = e.key.toLowerCase();
   if (k === "p" || k === "escape") {
     if (k === "escape" && (B.build || B.sel || B.moving)) { B.build = null; B.sel = null; B.group = null; B.moving = null; UI.buildBar(); UI.hud(true); return; }
-    if (B.paused) { B.paused = false; UI.closeModal(); } else UI.pause(); return;
+    if (B.paused) { if (NET.on) NET.cmd("pause", [false]); else B.paused = false; UI.closeModal(); } else UI.pause(); return;
   }
   if (B.paused || B.state === "pick") return;
   if (e.key === "Tab") { e.preventDefault(); const o = ["weapons", "support", "eco", "forces"]; B.tab = o[(o.indexOf(B.tab) + 1) % 4]; B.build = null; UI.buildBar(); return; }
@@ -5897,8 +5908,6 @@ window.addEventListener("keydown", e => {
   if (k === "c" && B.wallet && !NET.on) { setCmd(B.cmd + 1); return; }
   if (k === "g" && B.wallet) { const me = NET.on ? NET.me : B.cmd; giveScrap((me + 1) % B.players.length, 25); UI.hud(true); return; }
   if (k === "m" && B.sel && canMoveTower(B.sel)) { B.moving = B.sel; B.build = null; UI.buildBar(); }
-  if (k === "q") IN.ability();
-  if (k === "e" || k === " ") { IN.special(); e.preventDefault(); }
   if (k === "n" && (B.state === "prep" || B.state === "between")) IN.next();
   if (k === "f") { IN.speed(); UI.hud(true); }
   if (B.sel && B.group) {
@@ -6108,6 +6117,13 @@ function execCmd([who, f, a]) {
       case "ab": p.ability = true; break;
       case "next": if (B.state === "prep" || B.state === "between") B.timer = 0; break;
       case "speed": B.speed = B.speed === 1 ? 2 : B.speed === 2 ? 3 : 1; break;
+      case "pause": {
+        const on = !!a[0]; if (on === !!B.paused) break;
+        B.paused = on; B.pausedBy = who;
+        if (on) { if ($("modal").hidden) UI.pause(); }
+        else if ($("m-res")) UI.closeModal();
+        break;
+      }
       case "perk": takePerk(a[0], who); break;
       case "reroll": if (B.state === "pick" && !B.picked[who] && B.rerolls > 0) { B.rerolls--; B.pickN[who] = rollPerks(); UI.perkModal(); } break;
       default:
@@ -6347,7 +6363,7 @@ UI.title = function () {
   const myCore = host ? NET.players[0] && NET.players[0].core : players[NET.me] && players[NET.me].core;
   const link = location.origin + location.pathname + "?join=" + NET.code;
   const coreCards = Object.entries(CORES).map(([k, c]) => `<button class="card ${myCore === k ? "sel" : ""}" data-ncore="${k}" ${running ? "disabled" : ""}><span class="spread"><h3>${c.name}</h3><span class="tag ${c.tag}">${c.tag}</span></span><span class="small">${c.desc}</span><span class="small">Auto-targets: <b style="color:var(--gilt)">${c.targetLabel}</b> · Special: ${c.special}</span></button>`).join("");
-  const plist = players.map((p, i) => `<div class="card" style="--cc:${COOP_COL[i]};border-color:${COOP_COL[i]}"><span class="spread"><h3 style="color:${COOP_COL[i]}">${COOP_NUM[i]} · ${esc(p.name || "Commander")}${i === NET.me ? " (you)" : ""}</h3><span class="tag">${i === 0 ? "Host" : p.on ? "Connected" : "Away"}</span></span><span class="small">${CORES[p.core] ? CORES[p.core].name : ""}</span></div>`).join("");
+  const plist = players.map((p, i) => `<div class="card" style="--cc:${COOP_COL[i]};border-color:${COOP_COL[i]}"><span class="spread"><h3 style="color:${COOP_COL[i]}">${COOP_NUM[i]} · ${esc(p.name || "Commander")}${i === NET.me ? " (you)" : ""}</h3><span class="tag">${i === 0 ? "Host" : p.on ? "Connected" : "Away"}</span></span></div>`).join("");
   const diffs = Object.entries(DIFFS).map(([k, d]) => `<button class="qbtn ${NET.diff === k ? "primary" : ""}" data-ndiff="${k}" ${host ? "" : "disabled"} title="${esc(d.desc)}">${d.name}</button>`).join("");
   const starts = START_TOWERS.map(k => `<button class="qbtn ${NET.start === k ? "primary" : ""}" data-nstart="${k}" ${host ? "" : "disabled"}>${TOWERS[k].name}</button>`).join("");
   const legacy = LEGACY.map(l => { const r = rank(l.id), max = r >= l.max; return `<button class="card ${max ? "sel" : ""}" data-leg="${l.id}" ${max || META.legacy < l.cost || NET.on ? "disabled" : ""}><span class="spread"><h3>${l.name}</h3><span class="tag">${r}/${l.max}</span></span><span class="small">${l.desc}</span><span class="small">${max ? "Complete" : "Cost " + l.cost + " Legacy"}</span></button>`; }).join("");
@@ -6373,10 +6389,9 @@ UI.title = function () {
       <div class="eyebrow">Commanders</div><div class="grid">${plist}</div>
       ${running ? `<p class="small">${host ? "Your campaign is open. Friends who rejoin take back their commander." : "The campaign is in progress."}</p>
         <div class="row"><button class="primary" id="n-back">Return to the war table</button>${host ? `<button class="danger" id="n-end">End the campaign</button>` : ""}</div>`
-      : `<div class="eyebrow">Your citadel gun</div><div class="grid">${coreCards}</div>
-        <div class="eyebrow">Difficulty${host ? "" : " (chosen by the host)"}</div><div class="row">${diffs}</div>
+      : `<div class="eyebrow">Difficulty${host ? "" : " (chosen by the host)"}</div><div class="row">${diffs}</div>
         <div class="eyebrow">Starting weapon tower${host ? "" : " (chosen by the host)"}</div><div class="row">${starts}</div>
-        <p class="small">Every commander mans their own gun and keeps their own scrap and Tithe; all income is split evenly. Towers, upgrades and research are shared and anyone can build or upgrade anything. After each wave everyone picks their own blessing at 1/3 strength. Your Legacy upgrades don't apply online; the host's do.</p>
+        <p class="small">Every commander keeps their own scrap and Tithe; all income is split evenly (including 300 bonus starting scrap). Towers, upgrades and research are shared and anyone can build or upgrade anything. After each wave everyone picks their own blessing at 1/3 strength. Your Legacy upgrades don't apply online; the host's do.</p>
         <div class="row">${host ? `<button class="primary" id="n-begin">Begin the campaign with ${players.length} commander${players.length > 1 ? "s" : ""}</button>` : `<span class="small" style="color:var(--gilt)">Waiting for the host to begin…</span>`}</div>`}
       <span class="small" id="net-status" style="color:var(--gilt)">${esc(NET.status)}</span>
     </div>`;
