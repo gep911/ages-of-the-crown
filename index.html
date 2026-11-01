@@ -117,9 +117,16 @@ p{margin:0;line-height:1.5;max-width:65ch;color:#d8c8ad}
 #modal > .panel.m-small{width:min(480px,100%);margin:auto}
 .trees{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}
 .tree{flex:1 1 360px;border:1px solid color-mix(in srgb,var(--tc) 45%,transparent);border-radius:6px;padding:10px;background:linear-gradient(180deg,color-mix(in srgb,var(--tc) 10%,transparent),transparent 120px);display:flex;flex-direction:column;gap:6px;min-width:0}
-.tree:last-child{flex:2 1 560px}
+.tree.t-war{flex:2 1 560px}
+.tal.k-struct{background:linear-gradient(180deg,rgba(60,120,60,.55),rgba(20,40,20,.35))}
+.tal.k-upgrade{background:linear-gradient(180deg,rgba(130,95,40,.45),rgba(40,28,12,.35))}
+.tal.k-ability{background:linear-gradient(180deg,rgba(120,60,170,.6),rgba(40,20,60,.35))}
+.tal-legend{gap:16px}.tal-legend span{display:inline-flex;align-items:center;gap:6px}
+.lg{width:14px;height:14px;border-radius:3px;display:inline-block;border:1px solid rgba(255,255,255,.2)}
+.lg.k-struct{background:rgb(60,110,60)}.lg.k-upgrade{background:rgb(140,105,45)}.lg.k-ability{background:rgb(110,60,150)}
+.tal.rel{outline:2px solid #6ab8ff;outline-offset:1px;box-shadow:0 0 14px rgba(106,184,255,.75)!important;animation:none}
 .tree-h{display:flex;align-items:center;gap:10px;padding-bottom:6px;border-bottom:1px solid color-mix(in srgb,var(--tc) 35%,transparent)}
-.tree-h canvas{width:48px;height:48px;flex:none}.tree-h h3{color:var(--tc);margin:0}.tree-pts{margin-left:auto;color:var(--tc);font-weight:700}
+.tree-h canvas{width:48px;height:48px;flex:none}.tree-h h3{color:var(--tc);margin:0}.tree-pts{white-space:nowrap;margin-left:auto;color:var(--tc);font-weight:700}
 .trow{display:flex;gap:8px;align-items:stretch;padding:4px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
 .trow.locked{opacity:.55}
 .tera{flex:none;width:58px;font-family:var(--f-head,Cinzel,serif);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gilt-dim,#9a7a3a);padding-top:14px;text-align:center}
@@ -166,7 +173,10 @@ button.nudge{border-color:var(--gilt)!important;color:#ffe9a8}
 // SZ: how much larger every model is drawn (and how much room it takes) than in the first versions.
 // HS: the hive city's scale (a little larger still, so the spire dominates the field).
 const SZ = 1.35, HS = 1.5;
-const W = 3200, H = 2000, CX = 1600, CY = 1000, CORE_R = Math.round(112 * HS), BUILD_R = 470, TAU = Math.PI * 2;
+// the build circle is two hex rings wider than it used to be (470); you see 5 hex rings beyond it, the rest is fog
+const HEX_STEP = Math.sqrt(3) * Math.round(26 * SZ);
+const W = 3200, H = 2000, CX = 1600, CY = 1000, CORE_R = Math.round(112 * HS), BUILD_R = Math.round(470 + 2 * HEX_STEP), TAU = Math.PI * 2;
+const VIS_R = Math.round(BUILD_R + 5 * HEX_STEP);
 // hive-local coordinates (as drawn in render.js drawHive) to world: the hive's footprint is centred on the build circle
 const HIVE_BASE = 50;
 const hiveX = hx => CX + hx * HS, hiveY = hy => CY + (hy - HIVE_BASE) * HS;
@@ -315,6 +325,10 @@ const TOWERS = {
     desc: "Slows and tars enemies in its radius.", syn: "Tarred enemies burn double (INFERNO) and get crit by bolts (SHATTER).",
     ups: ["slow", "range", "dur"],
     br: [{ name: "Bog of Sorrows", desc: "Slow 60%." }, { name: "Pitch Mire", desc: "Tar lasts 6s and strips 3 armour." }, { name: "Sinking Mire", desc: "Enemies inside lose 3% max health per second (1% for tyrants)." }] },
+  auspex: { name: "Auspex Array", tab: "support", cost: 70, hp: 120, r: 16, range: 360, kind: "auspex", tags: ["vision"], col: "#7fd0c0",
+    desc: "A sensor mast that sees through the fog of war: towers can shoot anything it scans.", syn: "Place it at the edge of your defences to let long-range towers fire into the fog.",
+    ups: ["range", "hp"],
+    br: [{ name: "Deep Scan", desc: "Scan radius x1.5." }, { name: "Targeting Cogitators", desc: "Scanned enemies take +15% damage." }, { name: "Servo-skull Swarm", desc: "Scanned enemies are slowed by 15%." }] },
   barricade: { name: "Barricade", tab: "support", cost: 15, hp: 320, r: 20, kind: "wall", tags: ["wall"], col: "#8a7a66",
     desc: "Cheap wall. Enemies stop to break it.", syn: "Place walls inside tower range so enemies stall where you hit hardest.",
     ups: ["hp", "thorns"],
@@ -404,7 +418,7 @@ const UNITS = {
 };
 const TAB_ORDER = {
   weapons: ["bolt", "sniper", "flak", "mortar", "flamer", "arc", "missile", "lance", "plasma"],
-  support: ["barricade", "brazier", "tarpit", "reliquary", "stasis"],
+  support: ["barricade", "auspex", "brazier", "tarpit", "reliquary", "stasis"],
   eco: ["extractor", "salvage", "collector", "fabricator", "ossuary", "bank"],
   forces: ["monastery", "forge", "titanforge", "voidyard"],
 };
@@ -611,7 +625,7 @@ const MODIFIERS = [
   { id: "rich", name: "Rich Veins", desc: "Two extra ore veins.", good: true },
   { id: "swarms", name: "Swarm Season", desc: "Far more swarmlings.", good: false },
   { id: "pious", name: "Pious Garrison", desc: "Start with +100 scrap.", good: true },
-  { id: "portals", name: "Many Breaches", desc: "One extra breach from the start.", good: false },
+  { id: "portals", name: "Many Fronts", desc: "The enemy attacks from one more direction from the start.", good: false },
   { id: "skies", name: "Black Skies", desc: "Far more fliers (swarmlings before the Age of Brass).", good: false },
   { id: "tunnels", name: "Sapper Tunnels", desc: "Sappers in every wave from the Age of Powder.", good: false },
   { id: "eclipse", name: "Eclipse", desc: "A darker field. Enemies +10% health; +40% Tithe.", good: null },
@@ -711,14 +725,27 @@ for (const k in TOWERS) TOWERS[k].r = Math.round(TOWERS[k].r * SZ);
 for (const k in ENEMIES) ENEMIES[k].r = ENEMIES[k].r * SZ;
 for (const k in UNITS) if (!UNITS[k].titan && !UNITS[k].ship) UNITS[k].r = UNITS[k].r * SZ;
 for (const k in PROPS) PROPS[k].r = Math.round(PROPS[k].r * SZ);
-BOSSES.forEach(b => { if (b.r) b.r = b.r * SZ; });
+// tyrants were too easy to kill: 2.5x their old health
+BOSSES.forEach(b => { if (b.r) b.r = b.r * SZ; b.hp = Math.round(b.hp * 2.5); });
 
 /* ---------------- War Council trees ---------------- */
 const RES_TREES = [
   { id: "eco", name: "Adeptus Administratum", sub: "Tithes, salvage and the Imperium's ledgers", col: "#d1a54c" },
   { id: "war", name: "Forges of Mars", sub: "Weapons, war engines and the arts of destruction", col: "#d0553c" },
+  { id: "sup", name: "Officio Bastionis", sub: "Walls, shrines, wards and the craft of holding ground", col: "#8fb4c8" },
 ];
-const resTree = r => r.eco ? "eco" : "war";
+// support tree: support-tab structures and their refits, plus defensive and utility research
+const RES_SUPPORT = ["r_hp1", "r_hull1", "r_hull2", "r_repair", "r_adamant", "r_last", "r_choice", "r_reroll"];
+const resTree = r => { if (r.eco) return "eco"; const tw = r.tower || r.refit; if ((tw && TOWERS[tw].tab === "support") || RES_SUPPORT.includes(r.id)) return "sup"; return "war"; };
+// what kind of research it is: a new structure, an ability that fires during battle, or an upgrade
+const RES_ABILITY = ["r_orbital", "r_cyclonic", "r_last", "r_reroll"];
+const resKind = r => r.tower ? "struct" : RES_ABILITY.includes(r.id) ? "ability" : "upgrade";
+// research tied together: a tower and its refits, and prerequisite chains
+function resRelated(r) {
+  const tw = r.tower || r.refit, out = new Set();
+  for (const o of RESEARCH) { if (o === r) continue; if (tw && (o.tower === tw || o.refit === tw)) out.add(o.id); if (o.req === r.id || r.req === o.id) out.add(o.id); }
+  return out;
+}
 // icon for research that isn't tied to a tower (towers and refits use the tower's own picture)
 const RES_SYM = {
   r_start: "crate", r_tithe1: "ledger", r_tithe2: "ledger", r_alms: "coin", r_drill: "gear", r_bounty: "skullcoin", r_veins: "ore",
@@ -995,13 +1022,11 @@ function startBattle(col, idx) {
     B.towers.push(t);
   }
   B.carried = B.towers.length;
-  // breaches (portals)
+  // attack fronts: enemies march in from beyond the edge of the map (the old portals are gone)
   const base = rnd(0, Math.PI * 2);
   for (let i = 0; i < 5; i++) {
-    const a = base + i * Math.PI * 2 / 5 + rnd(-0.25, 0.25);
-    // breaches open on a ring 20% further from the build area than before, never near the map border
-    const d = PORTAL_D + rnd(-25, 25), x = clamp(CX + Math.cos(a) * d, PORTAL_MARGIN, W - PORTAL_MARGIN), y = clamp(CY + Math.sin(a) * d, PORTAL_MARGIN, H - PORTAL_MARGIN);
-    B.portals.push({ x, y, a, on: false });
+    const a = base + i * Math.PI * 2 / 5 + rnd(-0.25, 0.25), p = edgePoint(a, 70);
+    B.portals.push({ x: p.x, y: p.y, a, on: false });
   }
   if (node.mod === "bloodmoon" || counter) { /* applied in wave gen */ }
   if (counter) RUN.wrath = 0;
@@ -1050,7 +1075,8 @@ function destroyProp(p) {
 }
 function propAt(x, y, pad) { for (const p of B.props) if (dist2(x, y, p.x, p.y) < (p.r + pad) * (p.r + pad)) return p; return null; }
 
-const PORTAL_D = BUILD_R + 341, PORTAL_MARGIN = 170; // old average gap was ~284
+// a point just beyond the map's edge in direction a from the citadel
+function edgePoint(a, out) { const c = Math.cos(a), sn = Math.sin(a), t = Math.min(Math.abs(c) > 1e-6 ? (W / 2) / Math.abs(c) : 1e9, Math.abs(sn) > 1e-6 ? (H / 2) / Math.abs(sn) : 1e9); return { x: CX + c * (t + out), y: CY + sn * (t + out) }; }
 function portalCount(w) {
   let n = Math.min(4, 1 + Math.floor((w + colC() / 2) / 2));
   if (B.mod === "portals") n++;
@@ -1366,6 +1392,9 @@ function tStats(t) {
       s.rateB = (b === 0 ? 0.5 : (t.level >= 2 ? 0.32 : 0.25)) * bm; s.dmgB = (b === 1 ? 0.2 : 0.1) * bm; s.regen = b === 1; s.plenty = b === 2;
       break;
     }
+    case "auspex":
+      if (b === 0) s.range *= 1.5; s.spot = b === 1; s.slowScan = b === 2;
+      break;
     case "stasis":
       s.slow = Math.min(0.8, d.slow + (t.level >= 2 ? 0.05 : 0) + 0.05 * u("slow") + m.slowAdd * 0.5);
       s.every = 4 / (1 + 0.12 * u("rate")) / (t.level >= 2 ? 1.15 : 1); s.freeze = b === 0 ? 2 : 1; s.chrono = b === 1; s.entropy = b === 2;
@@ -1457,6 +1486,7 @@ function damage(e, amt, o) {
   if (o.exec && (e.elite || e.type === "boss")) a *= 3;
   if (o.air && e.flying) a *= o.air;
   if (B.mods.bounty && (e.elite || e.type === "boss")) a *= 1 + 0.3 * B.mods.bounty;
+  if (e.spotT > 0) a *= 1.15;
   if (e.totemT > 0) a *= 1.1;
   if (o.mark) e.markT = 4;
   let crit = false;
@@ -1577,11 +1607,22 @@ function burst(x, y, n, col, sp) {
 
 boom = cosmetic(boom); burst = cosmetic(burst); dmgText = cosmetic(dmgText);
 
+/* ---------------- Vision (fog of war) ----------------
+   You see the build area plus a 5-hex margin around it, and whatever your Auspex arrays scan.
+   Enemies in the fog can't be targeted. Part of the simulation, so every online player agrees. */
+function updateVision() {
+  const v = [{ x: CX, y: CY, r: VIS_R }];
+  for (const t of B.towers) if (t.type === "auspex" && t.built >= 1) v.push({ x: t.x, y: t.y, r: tStats(t).range });
+  B.vis = v;
+  for (const e of B.enemies) { e.vis = false; for (const c of v) { const rr = c.r + e.r; if (dist2(e.x, e.y, c.x, c.y) <= rr * rr) { e.vis = true; break; } } }
+}
+function visibleAt(x, y) { for (const c of B.vis || []) if (dist2(x, y, c.x, c.y) <= c.r * c.r) return true; return !B.vis; }
+
 /* ---------------- Targeting helpers ---------------- */
 function nearestToCore(x, y, range, minRange) {
   let best = null, bd = 1e9; const r2 = range * range, m2 = (minRange || 0) * (minRange || 0);
   for (const e of B.enemies) {
-    if (e.dead) continue;
+    if (e.dead || e.vis === false) continue;
     const d2 = dist2(x, y, e.x, e.y);
     if (d2 <= r2 + e.r * e.r * 4 && d2 >= m2 && e.dc < bd) { bd = e.dc; best = e; }
   }
@@ -1589,7 +1630,7 @@ function nearestToCore(x, y, range, minRange) {
 }
 function nearestTo(x, y, maxR, exclude) {
   let best = null, bd = maxR * maxR;
-  for (const e of B.enemies) { if (e.dead || (exclude && exclude.has(e))) continue; const d2 = dist2(x, y, e.x, e.y); if (d2 < bd) { bd = d2; best = e; } }
+  for (const e of B.enemies) { if (e.dead || e.vis === false || (exclude && exclude.has(e))) continue; const d2 = dist2(x, y, e.x, e.y); if (d2 < bd) { bd = d2; best = e; } }
   return best;
 }
 function segDist2(px, py, ax, ay, bx, by) {
@@ -1604,6 +1645,7 @@ function step(dt) {
   B.t += dt;
   const m = B.mods;
   for (const t of B.towers) if (!t.uid) t.uid = B.uidC = (B.uidC || 0) + 1; // stable ids for network commands
+  updateVision();
   if (B.later && B.later.length) { const due = B.later.filter(l => l.at <= B.t); if (due.length) { B.later = B.later.filter(l => l.at > B.t); for (const l of due) B.fx.push(l.fx); } }
 
   // state machine
@@ -1614,7 +1656,7 @@ function step(dt) {
     B.waveT += dt;
     while (B.spawnQueue.length && B.spawnQueue[0].t <= B.waveT) {
       const s = B.spawnQueue.shift(), p = B.portals[s.portal] || B.portals[0];
-      const off = rnd(-40, 40), px = p.x + Math.cos(p.a + Math.PI / 2) * off, py = p.y + Math.sin(p.a + Math.PI / 2) * off;
+      const off = rnd(-140, 140), px = p.x + Math.cos(p.a + Math.PI / 2) * off, py = p.y + Math.sin(p.a + Math.PI / 2) * off;
       if (s.squad) spawnSquad(s, px, py); else spawnEnemy(s.type, px, py, s.elite);
     }
     if (!B.spawnQueue.length && B.enemies.every(e => e.dead)) waveCleared();
@@ -1693,7 +1735,12 @@ function step(dt) {
       const rr = e.r + p.r;
       if (dist2(p.x, p.y, e.x, e.y) <= rr * rr) {
         p.hits.push(e);
-        if (p.splash) {
+        if (p.splash && p.o.one) {
+          // bolt rounds: the target plus at most one enemy beside it
+          damage(e, p.dmg, p.o); const n2 = nearestTo(p.x, p.y, p.splash + 12, new Set([e])); if (n2) damage(n2, p.dmg * 0.6, p.o);
+          B.fx.push({ k: "ring", x: p.x, y: p.y, r: 0, R: p.splash * 0.7, t: 0, T: 0.18, col: "#ffcf8a" });
+          if (p.pierce > 0) p.pierce--; else { p.life = 0; break; }
+        } else if (p.splash) {
           explode(p.x, p.y, p.splash, p.dmg, p.o);
           if (p.pierce > 0) { p.pierce--; damage(e, p.dmg * 0.5, p.o); } else { p.life = 0; break; }
         } else {
@@ -1893,7 +1940,7 @@ function coreMuzzle(ang, p) {
   const oy = K === "hymn" ? -18 : K === "lance" ? -9 : K === "pyre" ? -3 : -6;
   return { x: p.sx + Math.cos(ang) * len, y: p.sy + 30 + (oy - 30) * gs / 1.5 + Math.sin(ang) * len * 0.75 };
 }
-function coreCandidates() { const r2 = CORE_RANGE * CORE_RANGE; return B.enemies.filter(e => !e.dead && dist2(e.x, e.y, CX, CY) <= r2 && e.x > -10 && e.x < W + 10 && e.y > -10 && e.y < H + 10); }
+function coreCandidates() { const r2 = CORE_RANGE * CORE_RANGE; return B.enemies.filter(e => !e.dead && e.vis !== false && dist2(e.x, e.y, CX, CY) <= r2 && e.x > -10 && e.x < W + 10 && e.y > -10 && e.y < H + 10); }
 function coreTarget(mode, list) {
   list = list || coreCandidates();
   let best = null, bv = -Infinity;
@@ -1920,7 +1967,7 @@ function fireMissile(p, dmgM, spread, mode) {
 function pickTargets(t, range, n, mode, minRange) {
   const r2 = range * range, m2 = (minRange || 0) * (minRange || 0);
   const list = [];
-  for (const e of B.enemies) { if (e.dead) continue; const d2 = dist2(t.x, t.y, e.x, e.y); if (d2 <= r2 + e.r * e.r * 4 && d2 >= m2) list.push(e); }
+  for (const e of B.enemies) { if (e.dead || e.vis === false) continue; const d2 = dist2(t.x, t.y, e.x, e.y); if (d2 <= r2 + e.r * e.r * 4 && d2 >= m2) list.push(e); }
   if (mode === "healthiest") list.sort((a, b) => b.hp - a.hp);
   else if (mode === "air") list.sort((a, b) => ((a.flying ? 0 : a.type === "swarm" ? 300 : 900) + a.dc) - ((b.flying ? 0 : b.type === "swarm" ? 300 : 900) + b.dc));
   else list.sort((a, b) => a.dc - b.dc);
@@ -1942,14 +1989,20 @@ function updateTower(t, dt) {
   switch (d.kind) {
     case "proj": {
       if (t.cd > 0) break;
-      const tg = pickTargets(t, s.range, 1 + s.multi, d.aim);
+      let tg = pickTargets(t, s.range, 1 + s.multi, d.aim);
+      if (t.type === "bolt" && tg.length > 1) {
+        // a bolter traverses, it doesn't split: extra targets must lie within ~35° of the first target's bearing
+        const a0 = Math.atan2(tg[0].y - t.y, tg[0].x - t.x), cone = e => { let da = Math.atan2(e.y - t.y, e.x - t.x) - a0; while (da > Math.PI) da -= TAU; while (da < -Math.PI) da += TAU; return Math.abs(da) <= 0.6; };
+        const more = pickTargets(t, s.range, 40, d.aim).filter(e => e !== tg[0] && cone(e)).slice(0, s.multi);
+        tg = [tg[0]].concat(more);
+      }
       if (!tg.length) break;
       t.cd = 1 / s.rate; t.mf = 0.07;
       tg.forEach((e, i) => {
         const lp = leadPos(e, t.x, t.y, d.speed), a = Math.atan2(lp.y - t.y, lp.x - t.x);
         if (!i) t.ang = a;
         B.projs.push({ x: t.x + Math.cos(a) * 26, y: t.y - (t.type === "sniper" ? 50 : 16) + Math.sin(a) * 20, vx: Math.cos(a) * d.speed, vy: Math.sin(a) * d.speed, life: s.range / d.speed + 0.2, dmg: s.dmg, r: 3, pierce: s.pierce, splash: s.splash || 0,
-          hits: [], o: { tw: t, kinetic: t.type !== "flak", explosive: t.type === "flak", ap: s.ap, exec: s.exec, mark: s.mark, air: s.air, shock: s.shock, burn: (s.airBurn && e.flying) ? 8 * eraScale() : 8 * eraScale() * B.mods.hellfire }, style: t.type === "sniper" ? "sniper" : t.type === "flak" ? "flak" : "bolt", col: t.type === "sniper" ? "#e8ffd8" : t.type === "flak" ? "#ffcf8a" : "#ffe2a0" });
+          hits: [], o: { tw: t, kinetic: t.type !== "flak", explosive: t.type === "flak", one: t.type === "bolt", ap: s.ap, exec: s.exec, mark: s.mark, air: s.air, shock: s.shock, burn: (s.airBurn && e.flying) ? 8 * eraScale() : 8 * eraScale() * B.mods.hellfire }, style: t.type === "sniper" ? "sniper" : t.type === "flak" ? "flak" : "bolt", col: t.type === "sniper" ? "#e8ffd8" : t.type === "flak" ? "#ffcf8a" : "#ffe2a0" });
       });
       sfx(t.type === "sniper" ? "rifle" : "shot", t.x, t.type === "sniper" ? 0.8 : 0.5);
       break;
@@ -2048,6 +2101,12 @@ function updateTower(t, dt) {
           damage(e, s.dmg * mult * dt, { tw: t, dot: true, dt });
         }
       }
+      break;
+    }
+    case "auspex": {
+      // scanning sweep; spotted enemies take more damage (Targeting Cogitators) or are slowed (Servo-skull Swarm)
+      t.ang = (t.ang || 0) + dt * 1.6;
+      if (s.spot || s.slowScan) { const r2 = s.range * s.range; for (const e of B.enemies) if (!e.dead && dist2(t.x, t.y, e.x, e.y) <= r2) { if (s.spot) e.spotT = 0.3; if (s.slowScan) { e.slowF = Math.max(e.slowT > 0 ? e.slowF : 0, 0.15); e.slowT = Math.max(e.slowT, 0.2); } } }
       break;
     }
     case "stasis": {
@@ -2409,6 +2468,7 @@ function updateEnemy(e, dt) {
   if (e.totemT > 0) e.totemT -= dt;
   if (e.burnT > 0) { e.burnT -= dt; damage(e, e.burnDps * dt, { dot: true, dt }); if (R() < dt * 6) B.parts.push({ x: e.x + rnd(-e.r, e.r), y: e.y, vx: 0, vy: -30, t: 0, T: 0.4, col: "#ff8a3a", s: 2 }); if (e.dead) return; }
   if (e.slowT > 0) e.slowT -= dt;
+  if (e.spotT > 0) e.spotT -= dt;
   if (e.tarT > 0) e.tarT -= dt; else e.strip = 0;
   if (e.shockT > 0) e.shockT -= dt;
   if (e.meltT > 0) e.meltT -= dt;
@@ -2911,7 +2971,6 @@ function lighting(g, time) {
   for (const [tx, ty] of FORT_TORCHES) L(hiveX(tx), hiveY(ty), (90 + Math.sin(time * 9 + tx) * 6) * HS, 0.8 * (B.hiveA == null ? 1 : B.hiveA), "255,150,60");
   L(CX, hiveY(HIVE.tiers[2].top - 160), 170 * HS, 0.5, "255,200,120");
   for (const o of B.deposits) L(o.x, o.y, 55, 0.45, "230,180,80");
-  for (const p of B.portals) if (p.on) L(clamp(p.x, 20, W - 20), clamp(p.y, 20, H - 20), 210, 0.75, "255,50,40");
   for (const t of B.towers) {
     const ty = TOWERS[t.type];
     L(t.x, t.y, 46, 0.35, null);
@@ -2933,14 +2992,14 @@ function lighting(g, time) {
   }
   for (const s of B.shells) if (s.plasma || s.big) { const k = s.t / s.T; L(s.x + (s.tx - s.x) * k, s.y + (s.ty - s.y) * k, 110, 0.9, s.plasma ? "140,220,255" : "255,230,160"); }
   let n = 0; for (const p of B.projs) { if (n++ > 40) break; if (p.style === "missile" || p.homing || (p.o && p.o.src === "core")) L(p.x, p.y, 50, 0.6, "255,190,110"); }
-  for (const e of B.enemies) if (e.burnT > 0) L(e.x, e.y, 45, 0.55, "255,130,40");
+  for (const e of B.enemies) if (e.burnT > 0 && e.vis !== false) L(e.x, e.y, 45, 0.55, "255,130,40");
   for (const pl of B.players) {
     if (pl.flame) L(pl.flame.x + Math.cos(pl.flame.a) * pl.flame.range * 0.5, pl.flame.y + Math.sin(pl.flame.a) * pl.flame.range * 0.5, pl.flame.range, 1, "255,130,40");
     for (const b of pl.beams) for (let k = 0; k <= 4; k++) L(b.x1 + (b.x2 - b.x1) * k / 4, b.y1 + (b.y2 - b.y1) * k / 4, 80, 0.7, "190,150,255");
     if (pl.recoil > 0.5) { const m = coreMuzzle(pl.ang || 0, pl); L(m.x, m.y, 150, pl.recoil, "255,200,120"); }
   }
   // faint rim light on every enemy so they read in the dark
-  let ne = 0; for (const e of B.enemies) { if (ne++ > (LOD ? 40 : 70)) break; L(e.x, e.y - e.r, e.type === "boss" ? 90 : 28 + e.r, 0.38, null); }
+  let ne = 0; for (const e of B.enemies) { if (e.vis === false) continue; if (ne++ > (LOD ? 40 : 70)) break; L(e.x, e.y - e.r, e.type === "boss" ? 90 : 28 + e.r, 0.38, null); }
   // darkness
   l.setTransform(1, 0, 0, 1, 0, 0); l.globalCompositeOperation = "source-over"; l.clearRect(0, 0, LC.width, LC.height);
   l.fillStyle = ERA_STYLE[B.era].dark; l.fillRect(0, 0, LC.width, LC.height);
@@ -3066,7 +3125,7 @@ function mixHex(a, b, k) { const pa = parseInt(a.slice(1), 16), pb = parseInt(b.
 function drawTowerGlyph(g, type, x, y, sc, t, tw) {
   const d = TOWERS[type], time = performance.now() / 1000;
   TOWER_TINT = mixHex(STONE, d.col || "#5a5048", 0.38);
-  const r = d.r * sc, ang = tw ? tw.ang : -0.6, lvl = tw ? tw.level : 1, br = tw && tw.level >= 3 ? tw.branch : -1;
+  const r = d.r / SZ * sc, ang = tw ? tw.ang : -0.6, lvl = tw ? tw.level : 1, br = tw && tw.level >= 3 ? tw.branch : -1;
   const f = Math.cos(ang) >= 0 ? 1 : -1, mf = tw && tw.mf > 0;
   const lw = 1.6 * sc, ch = 18 * sc;
   g.save(); g.translate(x, y); g.lineCap = "round"; g.lineJoin = "round";
@@ -3225,6 +3284,20 @@ function drawTowerGlyph(g, type, x, y, sc, t, tw) {
       if (br === 1 || (tw && tw.ups && tw.ups.thorns)) { g.strokeStyle = "#9a9080"; g.lineWidth = 1; g.beginPath(); for (let i = 0; i <= 14; i++) { const xx = -w + i * w * 2 / 14; g.lineTo(xx, -h - dp - 2 * sc + (i % 2 ? -3 : 1) * sc); } g.stroke(); for (let i = 0; i < 5; i++) { const xx = -w * 0.8 + i * w * 0.4; g.fillStyle = "#b0a898"; poly(g, [[xx - 1.5 * sc, -h], [xx, -h - 7 * sc], [xx + 1.5 * sc, -h]]); g.fill(); } }
       if (br === 2) { g.fillStyle = "rgba(255,233,168,.5)"; g.beginPath(); g.arc(0, -h - dp - 4 * sc, 4 * sc, 0, 7); g.fill(); }
       if (br === 0) { g.fillStyle = "#6a6058"; g.fillRect(-w * 0.6, -h - dp - 4 * sc, w * 1.2, 4 * sc); }
+      break;
+    }
+    case "auspex": { // sensor mast with a slowly turning auspex dish
+      g.fillStyle = "rgba(0,0,0,.4)"; g.beginPath(); g.ellipse(4 * sc, 2 * sc, r * 1.05, r * 0.5, 0, 0, 7); g.fill();
+      g.fillStyle = STONE_D; g.fillRect(-10 * sc, -6 * sc, 20 * sc, 6 * sc); g.fillStyle = TOWER_TINT; g.fillRect(-8 * sc, -10 * sc, 16 * sc, 5 * sc);
+      g.strokeStyle = "#3a3632"; g.lineWidth = 2.2 * sc; g.beginPath(); g.moveTo(-6 * sc, -9 * sc); g.lineTo(0, -40 * sc); g.lineTo(6 * sc, -9 * sc); g.moveTo(-4 * sc, -20 * sc); g.lineTo(4 * sc, -20 * sc); g.moveTo(-2.5 * sc, -30 * sc); g.lineTo(2.5 * sc, -30 * sc); g.stroke();
+      const da = time * 1.6, cw = Math.cos(da), dx = cw * 11 * sc;
+      g.fillStyle = "#5a6a66"; g.beginPath(); g.ellipse(0, -44 * sc, Math.max(2 * sc, Math.abs(dx)), 7 * sc, 0, 0, 7); g.fill();
+      g.strokeStyle = lvl >= 2 ? BRASS : "#2a3230"; g.lineWidth = 1.3 * sc; g.stroke();
+      g.strokeStyle = "#2a3230"; g.lineWidth = 1.2 * sc; g.beginPath(); g.moveTo(0, -44 * sc); g.lineTo(cw * 9 * sc, -48 * sc); g.stroke();
+      g.fillStyle = "rgba(127,240,210," + (0.6 + 0.4 * Math.sin(time * 5)) + ")"; g.beginPath(); g.arc(cw * 9 * sc, -48 * sc, 1.8 * sc, 0, 7); g.fill();
+      g.fillStyle = "#0c1412"; g.fillRect(-5 * sc, -18 * sc, 10 * sc, 6 * sc); g.fillStyle = "rgba(127,240,210,.8)"; g.fillRect(-4 * sc, -17 * sc, 8 * sc * (0.5 + 0.5 * Math.sin(time * 2 + x)), 1.4 * sc);
+      skullIcon(g, 0, -8 * sc, 2.2 * sc);
+      if (lvl >= 3) seal(g, 8 * sc, -10 * sc, 2 * sc);
       break;
     }
     case "reliquary": { // wayside shrine
@@ -3905,7 +3978,7 @@ function drawLinks(g, time) {
 }
 // Each placed tower keeps its own small sprite, repainted only when its look changes
 // (aim angle, level, path, muzzle flash) or, for animated towers, at QUAL.animFps.
-const ANIMATED = { arc: 1, plasma: 1, brazier: 1, tarpit: 1, reliquary: 1, stasis: 1, extractor: 1, fabricator: 1, salvage: 1, flak: 1, ossuary: 1, forge: 1, titanforge: 1, voidyard: 1 };
+const ANIMATED = { auspex: 1, arc: 1, plasma: 1, brazier: 1, tarpit: 1, reliquary: 1, stasis: 1, extractor: 1, fabricator: 1, salvage: 1, flak: 1, ossuary: 1, forge: 1, titanforge: 1, voidyard: 1 };
 function drawTowerCached(g, t, sc, time) {
   const dsc = sprScale(), ab = Math.round((((t.ang % TAU) + TAU) % TAU) / TAU * 48) % 48;
   const key = t.level + "|" + t.branch + "|" + ab + "|" + (t.mf > 0 ? 1 : 0) + "|" + sc.toFixed(2) + "|" + dsc + "|" + (t.beamT.length ? 1 : 0) + "|" + ((t.ups && t.ups.thorns) || 0) + "|" + Math.min(9, Math.floor((t.bones || 0) / 2)) + "|" + (ANIMATED[t.type] ? Math.floor(time * QUAL.animFps) : 0);
@@ -4340,19 +4413,7 @@ function render() {
     g.restore();
   }
 
-  // breaches: rifts torn in the world
-  for (const p of B.portals) {
-    if (!p.on) continue;
-    const px = clamp(p.x, 30, W - 30), py = clamp(p.y, 30, H - 30);
-    glow(g, px, py, 110, "200,30,24", 0.5);
-    g.save(); g.translate(px, py);
-    g.fillStyle = "#050203"; g.beginPath(); g.ellipse(0, 0, 22, 42, 0, 0, 7); g.fill();
-    for (let i = 0; i < 4; i++) { g.strokeStyle = i % 2 ? ERA_STYLE[B.era].ichor : ERAS[B.era].tint; g.globalAlpha = 0.8; g.lineWidth = 2.5 - i * 0.4; g.beginPath(); g.ellipse(0, 0, 24 + i * 7, 44 + i * 9, time * (0.8 + i * 0.3) * (i % 2 ? -1 : 1), 0.3, 4.2); g.stroke(); }
-    g.globalAlpha = 1; g.strokeStyle = "#ff6a4a"; g.lineWidth = 2; g.beginPath(); g.ellipse(0, 0, 22, 42, 0, 0, 7); g.stroke();
-    if (Math.random() < 0.08) { g.strokeStyle = "#ffb0a0"; g.lineWidth = 1.5; g.beginPath(); let x = rnd(-20, 20), y = rnd(-40, 40); g.moveTo(x, y); for (let k = 0; k < 4; k++) { x += rnd(-18, 18); y += rnd(-18, 18); g.lineTo(x, y); } g.stroke(); }
-    g.restore();
-    if (Math.random() < 0.3) { const a = rnd(0, 6.28); B.parts.push({ x: px + Math.cos(a) * 70, y: py + Math.sin(a) * 70, vx: -Math.cos(a) * 60, vy: -Math.sin(a) * 60, t: 0, T: 1, col: "#ff6a4a", s: 2, k: "spark" }); }
-  }
+
 
   // fallen enemies
   for (const c of B.corpses) {
@@ -4391,7 +4452,7 @@ function render() {
   LOD = B.enemies.length > 90;
   const tint = ERAS[B.era].tint, items = [];
   for (const t of B.towers) items.push([t.y + t.r * 0.6, 0, t]);
-  for (const e of B.enemies) items.push([e.y + e.r, 1, e]);
+  for (const e of B.enemies) if (e.vis !== false) items.push([e.y + e.r, 1, e]); // enemies in the fog stay hidden
   for (const p of B.props) items.push([p.y, 3, p]);
   items.push([hiveY(110), 2, null]);
   for (const u of B.units) if (!u.dead) items.push([u.y, 5, u]);
@@ -4438,7 +4499,7 @@ function render() {
   const hiveA = B.hiveA == null ? 1 : B.hiveA, behindHive = t => t.y < hiveY(110) && t.y > hiveY(HIVE_TOP) && Math.abs(t.x - CX) < (t.y < hiveY(-40) ? 60 : 200) * HS;
   for (const t of B.towers) { const d = TOWERS[t.type]; if (d.vein || (t.type === "barricade" && t.linked) || (hiveA > 0.6 && behindHive(t))) continue; hexPath(g, t.x, t.y + 2, HEX_R - 1.5 + (t.r > 24 * SZ ? 10 * SZ : 0)); g.strokeStyle = "rgba(" + (CAT_COL[d.tab] || "200,190,170") + ",.7)"; g.lineWidth = 2; g.stroke(); }
   g.globalCompositeOperation = "lighter";
-  for (const e of B.enemies) if (e._ex != null && e.type !== "swarm") { const r = e.type === "boss" ? 7 : e.type === "brute" ? 4 : 3; g.fillStyle = e.type === "boss" ? "rgba(255,210,90,.55)" : "rgba(255,60,40,.5)"; g.beginPath(); g.arc(e._ex, e._ey, r, 0, 7); g.fill(); }
+  for (const e of B.enemies) if (e._ex != null && e.type !== "swarm" && e.vis !== false) { const r = e.type === "boss" ? 7 : e.type === "brute" ? 4 : 3; g.fillStyle = e.type === "boss" ? "rgba(255,210,90,.55)" : "rgba(255,60,40,.5)"; g.beginPath(); g.arc(e._ex, e._ey, r, 0, 7); g.fill(); }
   for (const t of B.towers) {
     if (t.type === "arc") { g.fillStyle = "rgba(160,220,255,.35)"; g.beginPath(); g.arc(t.x, t.y - 49, 10, 0, 7); g.fill(); }
     if (t.type === "brazier") { g.fillStyle = "rgba(255,160,60,.25)"; g.beginPath(); g.arc(t.x, t.y - 36, 18, 0, 7); g.fill(); }
@@ -4517,6 +4578,8 @@ function render() {
   }
   g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
 
+  // ===== fog of war =====
+  drawFog(g, time);
   // ===== warships in low orbit =====
   for (const u of B.units) if (u.ship && !u.dead) drawShip(g, u, time);
   // ===== atmosphere and grade =====
@@ -4543,6 +4606,7 @@ function render() {
   for (const u of B.units) if (!u.dead && !u.ship && u.hp < u.maxhp) { const w = u.titan ? 50 : 16, y0 = u.y - u.alt - (u.titan ? UNITS[u.type].h + 12 : 40); g.fillStyle = "rgba(0,0,0,.75)"; g.fillRect(u.x - w / 2, y0, w, 3); g.fillStyle = "#8fbf4f"; g.fillRect(u.x - w / 2, y0, w * Math.max(0, u.hp / u.maxhp), 3); }
   for (const p of B.props) if (p.hp < p.maxhp) { const w = Math.max(24, p.r * 1.4), y0 = p.y + 6; g.fillStyle = "rgba(0,0,0,.7)"; g.fillRect(p.x - w / 2, y0, w, 3); g.fillStyle = "#b8a888"; g.fillRect(p.x - w / 2, y0, w * Math.max(0, p.hp / p.maxhp), 3); }
   for (const e of B.enemies) {
+    if (e.vis === false) continue;
     const top = e.y - e.r * 3 - (e.alt || 0);
     if (e.burnT > 0) { g.fillStyle = "rgba(255,140,40,.9)"; for (let i = 0; i < 2; i++) { const fx = e.x + (i ? 3 : -3), fy = top + 6; g.beginPath(); g.moveTo(fx - 2.5, fy); g.quadraticCurveTo(fx, fy - 7 - Math.random() * 3, fx + 2.5, fy); g.fill(); } }
     if (e.shockT > 0 && Math.random() < 0.5) { g.strokeStyle = "#bfe8ff"; g.lineWidth = 1; g.beginPath(); g.moveTo(e.x + rnd(-e.r, e.r), e.y + rnd(-e.r * 2, e.r)); g.lineTo(e.x + rnd(-e.r, e.r), e.y + rnd(-e.r * 2, e.r)); g.stroke(); }
@@ -4781,6 +4845,30 @@ function drawTreeIcon(c, id) {
   g.fillStyle = "#110c09"; g.beginPath(); g.arc(22, 22, 21, 0, TAU); g.fill(); g.strokeStyle = id === "eco" ? "#d1a54c" : "#d0553c"; g.lineWidth = 2; g.stroke();
   drawResSym(g, id === "eco" ? "ledger" : "gear");
 }
+
+/* ---------- Fog of war ---------- */
+// a low-resolution darkness mask over the whole map with soft holes for the citadel's sight and each Auspex
+const FOGW = { key: "", c: null, sc: 8 };
+function drawFog(g, time) {
+  const vis = B.vis || [{ x: CX, y: CY, r: VIS_R }];
+  const key = vis.map(v => Math.round(v.x) + "," + Math.round(v.y) + "," + Math.round(v.r)).join("|");
+  if (FOGW.key !== key || !FOGW.c) {
+    const k = FOGW.sc, m = 400, c = FOGW.c || document.createElement("canvas"); c.width = Math.ceil((W + m * 2) / k); c.height = Math.ceil((H + m * 2) / k);
+    const f = c.getContext("2d"); f.setTransform(1, 0, 0, 1, 0, 0); f.globalCompositeOperation = "source-over"; f.clearRect(0, 0, c.width, c.height);
+    f.fillStyle = "rgba(6,5,5,.9)"; f.fillRect(0, 0, c.width, c.height);
+    f.globalCompositeOperation = "destination-out";
+    for (const v of vis) {
+      const x = (v.x + m) / k, y = (v.y + m) / k, r = v.r / k, gr = f.createRadialGradient(x, y, Math.max(0, r - 70 / k), x, y, r + 10 / k);
+      gr.addColorStop(0, "rgba(0,0,0,1)"); gr.addColorStop(1, "rgba(0,0,0,0)"); f.fillStyle = gr; f.beginPath(); f.arc(x, y, r + 10 / k, 0, TAU); f.fill();
+    }
+    f.globalCompositeOperation = "source-over"; FOGW.c = c; FOGW.key = key; FOGW.m = m;
+  }
+  g.drawImage(FOGW.c, -FOGW.m, -FOGW.m, W + FOGW.m * 2, H + FOGW.m * 2);
+  // drifting wisps along the edge of sight
+  g.save(); g.globalAlpha = 0.07; g.strokeStyle = "#9a9080"; g.lineWidth = 30;
+  for (let i = 0; i < 3; i++) { g.beginPath(); g.arc(CX, CY, VIS_R + 30 + i * 40, time * 0.02 * (i % 2 ? 1 : -1) + i, time * 0.02 * (i % 2 ? 1 : -1) + i + 2.2); g.stroke(); }
+  g.restore();
+}
 /* ============================================================
    Audio: procedural sound effects and generative music (Web Audio)
    Everything is synthesised at runtime; there are no sound files.
@@ -4859,10 +4947,16 @@ const SFX = {
   kill:    { gap: 0.035, f(t, o, v) { noise(t, 0.07, o, 0.13 * v, "bandpass", 500 + Math.random() * 500, 200, 2); } },
   squish:  { gap: 0.04, f(t, o, v) { noise(t, 0.12, o, 0.16 * v, "lowpass", 900, 120, 3); osc("sine", 160, 60, t, 0.08, o, 0.1 * v); } },
   build:   { gap: 0.05, f(t, o, v) { for (const [f, a] of [[420, 0.12], [1130, 0.07], [1870, 0.05], [2630, 0.03]]) osc("sine", f, f * 0.98, t, 0.35, o, a * v); noise(t, 0.03, o, 0.2 * v, "highpass", 3000, 3000); osc("sine", 90, 50, t, 0.12, o, 0.3 * v); } },
-  upgrade: { gap: 0.1,  f(t, o, v) { [523, 659, 784, 1047].forEach((f, i) => osc("triangle", f, f, t + i * 0.06, 0.4, o, 0.08 * v)); } },
+  // upgrade: servo whine winding up, a heavy mag-clamp clunk, a cogitator chirp and a low reactor hum
+  upgrade: { gap: 0.12, f(t, o, v) {
+    osc("sawtooth", 110, 330, t, 0.28, o, 0.045 * v, 0.02); noise(t, 0.3, o, 0.12 * v, "bandpass", 500, 2400, 4, 0.02);
+    osc("sine", 82, 38, t + 0.27, 0.22, o, 0.42 * v); noise(t + 0.27, 0.09, o, 0.35 * v, "lowpass", 1400, 200);
+    osc("square", 1760, 1760, t + 0.36, 0.035, o, 0.02 * v); osc("square", 2350, 2350, t + 0.41, 0.035, o, 0.018 * v);
+    osc("sawtooth", 55, 52, t + 0.27, 0.6, o, 0.05 * v, 0.05); } },
   sell:    { gap: 0.1,  f(t, o, v) { [1568, 1319, 2093].forEach((f, i) => osc("square", f, f, t + i * 0.05, 0.12, o, 0.025 * v)); } },
   coin:    { gap: 0.12, f(t, o, v) { osc("square", 1975, 1975, t, 0.05, o, 0.02 * v); osc("square", 2637, 2637, t + 0.05, 0.1, o, 0.02 * v); } },
-  click:   { gap: 0.03, f(t, o, v) { osc("triangle", 900, 600, t, 0.04, o, 0.08 * v); } },
+  // click: a heavy relay snapping shut rather than a bright UI blip
+  click:   { gap: 0.03, f(t, o, v) { noise(t, 0.018, o, 0.22 * v, "highpass", 2500, 2500); osc("square", 190, 90, t, 0.05, o, 0.05 * v); osc("sine", 120, 70, t + 0.005, 0.06, o, 0.16 * v); } },
   error:   { gap: 0.2,  f(t, o, v) { osc("square", 160, 120, t, 0.18, o, 0.05 * v); } },
   horn:    { gap: 0.8,  f(t, o, v) {
     for (const f of [110, 110.8, 165.2]) { const s = AC.createOscillator(), g = AC.createGain(), lp = AC.createBiquadFilter(); s.type = "sawtooth"; s.frequency.setValueAtTime(f * 0.94, t); s.frequency.linearRampToValueAtTime(f, t + 0.25);
@@ -5201,6 +5295,7 @@ const UI = {
           <li><span class="kbd">Shift</span>-click towers of the same type to select them together and upgrade, repair or sell them in one go. Double-click a tower to select every tower of its type.</li>
           <li>Select a tower and press <span class="kbd">M</span> (or Move) to relocate it for 10% of what it cost. Ore-vein buildings can't move.</li>
           <li>Co-op: <span class="kbd">C</span> or a commander's banner in the top bar passes the controls (aim, abilities, purse) to the next commander. <span class="kbd">G</span>, or Shift/right-click a banner, gives 25 scrap to another commander. Guns of the other commanders keep firing on their own.</li>
+          <li>Fog of war: you only see your build area and a margin around it. Enemies march in from beyond the edge of the map; arrows on the screen edge show where each wave comes from. Build an <b>Auspex Array</b> (Support) to see and shoot further into the fog.</li>
           <li><span class="kbd">N</span> call the next wave early · <span class="kbd">F</span> speed · <span class="kbd">P</span> pause</li></ul></div>
         <div><h3>The loop</h3><ul class="list small">
           <li>Each battle has 7 waves (tyrants: 8) with a full minute to build before each wave. Press <span class="kbd">N</span> to call the next wave early. Kills give scrap for building.</li>
@@ -5258,7 +5353,7 @@ const UI = {
         <span class="stat">Core level <b class="num">${RUN.level}</b> <span class="small num">${RUN.xp}/${RUN.level * 100} xp</span></span>
         <button id="b-repair" ${RUN.hpFrac >= 1 || RUN.tithe < repairCostT ? "disabled" : ""}>Repair 10% · ${repairCostT} Tithe</button>
       </div>
-      ${RUN.wrath >= 6 ? `<div class="panel"><h3 style="color:#e36a6a">The enemy is counterattacking</h3><p class="small">Your next battle has more enemies and an extra breach, and pays 50% more Tithe.</p></div>` : ""}
+      ${RUN.wrath >= 6 ? `<div class="panel"><h3 style="color:#e36a6a">The enemy is counterattacking</h3><p class="small">Your next battle has more enemies and attacks from an extra direction, and pays 50% more Tithe.</p></div>` : ""}
       <div id="mapwrap">${svg}</div>
       <div class="legend">${Object.keys(NODE_ICON).map(k => `<span><b>${NODE_ICON[k] + TXT}</b> ${NODE_NAME[k]}</span>`).join("")}<span><b style="color:#9a7ae0">●</b> Battle modifier</span></div>
       <div id="nodeinfo" class="panel"><h3>Choose your next battle</h3><p class="small">Highlighted nodes are reachable. Hover or tap one to see details.</p></div>
@@ -5369,20 +5464,28 @@ const UI = {
     const tile = r => {
       const rk0 = resRank(r.id), maxed = rk0 >= 3, locked = r.era > era, needs = r.req && !RUN.research[r.req], cost = maxed ? 0 : r.rankCost[rk0], afford = tithe >= cost;
       const off = maxed || locked || needs || !afford, st = maxed ? "max" : locked || needs ? "lock" : afford ? "avail nudge" : "poor";
-      return `<button class="tal ${st} ${rk0 ? "own" : ""}" data-r="${r.id}" data-tip="r:${r.id}" aria-disabled="${off}" aria-label="${esc(r.name)}, rank ${rk0} of 3"><canvas width="88" height="88" data-ico="${r.id}"></canvas><span class="tal-rk num">${rk0}/3</span>${r.req ? `<span class="tal-req" title="Requires ${esc(RESEARCH.find(x => x.id === r.req).name)}">▲</span>` : ""}<span class="tal-nm">${esc(r.name)}</span><span class="tal-c num">${maxed ? "Mastered" : locked ? "Locked" : cost + " T"}</span></button>`;
+      return `<button class="tal k-${resKind(r)} ${st} ${rk0 ? "own" : ""}" data-r="${r.id}" data-tip="r:${r.id}" aria-disabled="${off}" aria-label="${esc(r.name)}, rank ${rk0} of 3"><canvas width="88" height="88" data-ico="${r.id}"></canvas><span class="tal-rk num">${rk0}/3</span>${r.req ? `<span class="tal-req" title="Requires ${esc(RESEARCH.find(x => x.id === r.req).name)}">▲</span>` : ""}<span class="tal-nm">${esc(r.name)}</span><span class="tal-c num">${maxed ? "Mastered" : locked ? "Locked" : cost + " T"}</span></button>`;
     };
     const spent = list => list.reduce((a, r) => { const k = resRank(r.id); return a + r.rankCost.slice(0, k).reduce((x, y) => x + y, 0); }, 0);
     const tree = t => {
       const list = RESEARCH.filter(r => resTree(r) === t.id);
-      return `<section class="tree" style="--tc:${t.col}"><div class="tree-h"><canvas width="96" height="96" data-tree="${t.id}"></canvas><div><h3>${t.name}</h3><span class="small">${t.sub}</span></div><span class="tree-pts num" title="Tithe invested in this tree">${fmt(spent(list))} T</span></div>
+      return `<section class="tree t-${t.id}" style="--tc:${t.col}"><div class="tree-h"><canvas width="96" height="96" data-tree="${t.id}"></canvas><div><h3>${t.name}</h3><span class="small">${t.sub}</span></div><span class="tree-pts num" title="Tithe invested in this tree">${fmt(spent(list))} T</span></div>
         ${[0, 1, 2, 3, 4].map(e => { const row = list.filter(r => r.era === e); return `<div class="trow ${e > era ? "locked" : ""}"><div class="tera">${ERAS[e].name.replace(/^Age of (the )?/, "")}${e > era ? "<br><span class='small'>locked</span>" : ""}</div><div class="tnodes">${row.length ? row.map(tile).join("") : `<span class="small" style="opacity:.6">Nothing in this age</span>`}</div></div>`; }).join("")}</section>`;
     };
     UI.modal(`<div class="spread"><div><div class="eyebrow">Tithe ${fmt(tithe)}${RUN.coop && !NET.on ? " · Commander " + COOP_NUM[RUN.cmd] + " is paying" : ""}</div><h2>War Council</h2></div>${UI.cmdChips()}<button id="m-x">Close</button></div>
-      <p class="small">Two schools of research, by age. Every entry has 3 ranks: the first unlocks it, rank 2 costs half the base price again and makes it 1.5x as strong, rank 3 costs the base price again and makes it twice as strong. Glowing entries are ones you can afford now. <span style="color:var(--gilt)">▲</span> needs an earlier entry first. Hover or tap for details.</p>
+      <p class="small">Three schools of research, by age. Every entry has 3 ranks: the first unlocks it, rank 2 costs half the base price again and makes it 1.5x as strong, rank 3 costs the base price again and makes it twice as strong. Glowing entries are ones you can afford now. <span style="color:var(--gilt)">▲</span> needs an earlier entry first. Hover an entry to light up related research in <b style="color:#6ab8ff">blue</b> (a structure's refits, and prerequisites).</p>
+      <div class="row small tal-legend"><span><i class="lg k-struct"></i>New structure</span><span><i class="lg k-upgrade"></i>Upgrade</span><span><i class="lg k-ability"></i>Battle ability</span></div>
       <div class="trees">${RES_TREES.map(tree).join("")}</div>`, "wide");
     if (era < 4) $("modal").querySelectorAll(".trow.locked .tera").forEach(x => { if (x.textContent.startsWith("Eternal")) x.title = "Opens after you defeat the Maw of the Hollow Star and enter the endless war."; });
     $("modal").querySelectorAll("canvas[data-ico]").forEach(c => drawResIcon(c, RESEARCH.find(r => r.id === c.dataset.ico)));
     $("modal").querySelectorAll("canvas[data-tree]").forEach(c => drawTreeIcon(c, c.dataset.tree));
+    // hover: highlight refits of a structure (and prerequisite chains) in blue
+    const tiles = [...$("modal").querySelectorAll(".tal")];
+    tiles.forEach(el => {
+      const rel = resRelated(RESEARCH.find(x => x.id === el.dataset.r));
+      el.addEventListener("mouseenter", () => tiles.forEach(o => o.classList.toggle("rel", rel.has(o.dataset.r))));
+      el.addEventListener("mouseleave", () => tiles.forEach(o => o.classList.remove("rel")));
+    });
     $("m-x").onclick = () => { UI.closeModal(); UI.map(); };
     UI.bindCmd(() => UI.council());
     UI.bindTips($("modal"));
