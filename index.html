@@ -4,7 +4,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cinzel:wght@500;700&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cinzel:wght@500;700&family=Alegreya+Sans:wght@400;500;700&family=Barlow+Condensed:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
 <style>
 /* Layout: full-bleed battlefield canvas with HTML overlays; menus are framed parchment-on-soot panels. Single dark look by design. */
 :root{
@@ -146,6 +146,74 @@ p{margin:0;line-height:1.5;max-width:65ch;color:#d8c8ad}
 .nudge{animation:nudge 1.5s ease-in-out infinite}
 button.nudge{border-color:var(--gilt)!important;color:#ffe9a8}
 @media (prefers-reduced-motion:reduce){.nudge{animation:none;box-shadow:0 0 0 2px rgba(255,214,130,.9)}}
+#net-cursors{position:fixed;inset:0;pointer-events:none;z-index:60}
+.netcur{position:absolute;left:0;top:0;color:var(--cc);will-change:transform;filter:drop-shadow(0 1px 2px rgba(0,0,0,.8))}
+.netcur span{position:absolute;left:14px;top:20px;white-space:nowrap;font:600 11px/1 var(--f-mono,monospace);letter-spacing:.06em;color:#0b0d0c;background:var(--cc);padding:2px 5px;border-radius:2px}
+
+/* ================= Grimdark menus (Darktide-inspired) =================
+   Everything outside the battle HUD: title, lobby, War Table, War Council, settings, modals.
+   Near-black green-grey, CRT scanlines and grain, bevelled dataslate panels with corner brackets,
+   condensed type with terminal labels, brass and amber highlights. */
+:root{
+  --dt-bg:#080a09; --dt-panel:rgba(13,17,15,.94); --dt-panel2:rgba(20,26,22,.92); --dt-line:#2f3a33; --dt-line2:#4a584c;
+  --dt-text:#cfcbb4; --dt-dim:#7d8473; --dt-amber:#e0b052; --dt-brass:#b8914a; --dt-term:#9cc79a; --dt-red:#7d1717;
+  --f-mono:"Share Tech Mono","Consolas",monospace; --f-cond:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+}
+#screen,#modal{font-family:var(--f-cond);font-size:16px;color:var(--dt-text)}
+#screen{background-color:var(--dt-bg)!important}
+#screen::before,#modal::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .6 0 0 0 0 .65 0 0 0 0 .55 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");opacity:.55;mix-blend-mode:multiply;animation:dt-flicker 6s steps(1) infinite}
+#screen::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 50% 40%,transparent 35%,rgba(0,0,0,.75) 100%)}
+@keyframes dt-flicker{0%,100%{opacity:.55}47%{opacity:.5}48%{opacity:.62}49%{opacity:.52}}
+#screen > .wrap,#modal > .panel{position:relative;z-index:1}
+#modal{background:radial-gradient(ellipse at 50% 30%,rgba(18,26,21,.82),rgba(4,6,5,.93));backdrop-filter:blur(2px)}
+#screen p,#modal p{color:#bdbaa4;font-size:16px}
+#screen .small,#modal .small{color:var(--dt-dim);font-size:14px}
+#screen h2,#modal h2{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.14em;font-size:21px;color:#e6e0c8;text-shadow:0 0 12px rgba(224,176,82,.12)}
+#screen h3,#modal h3{font-family:var(--f-head);text-transform:uppercase;letter-spacing:.1em;font-size:14px;color:var(--dt-amber)}
+#screen .title{background:linear-gradient(180deg,#f2deaa 0%,#c9a35a 45%,#6e5326 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 3px 0 #000) drop-shadow(0 0 18px rgba(224,176,82,.18));letter-spacing:.02em}
+#screen .eyebrow,#modal .eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.18em;color:var(--dt-term);opacity:.85}
+#screen .eyebrow::before,#modal .eyebrow::before{content:"+++ ";color:var(--dt-brass)}
+/* dataslate panels: bevelled corners, thin frame, brass corner brackets, a terminal header line */
+#screen .panel,#modal > .panel{background:
+    linear-gradient(var(--dt-brass),var(--dt-brass)) left top/14px 2px no-repeat, linear-gradient(var(--dt-brass),var(--dt-brass)) left top/2px 14px no-repeat,
+    linear-gradient(var(--dt-brass),var(--dt-brass)) right top/14px 2px no-repeat, linear-gradient(var(--dt-brass),var(--dt-brass)) right top/2px 14px no-repeat,
+    linear-gradient(var(--dt-brass),var(--dt-brass)) left bottom/14px 2px no-repeat, linear-gradient(var(--dt-brass),var(--dt-brass)) left bottom/2px 14px no-repeat,
+    linear-gradient(var(--dt-brass),var(--dt-brass)) right bottom/14px 2px no-repeat, linear-gradient(var(--dt-brass),var(--dt-brass)) right bottom/2px 14px no-repeat,
+    repeating-linear-gradient(0deg,rgba(156,199,154,.025) 0 1px,transparent 1px 4px),
+    linear-gradient(180deg,var(--dt-panel2),var(--dt-panel));
+  border:1px solid var(--dt-line);border-radius:0;box-shadow:0 0 0 1px rgba(0,0,0,.6),0 12px 40px rgba(0,0,0,.55),inset 0 1px 0 rgba(207,203,180,.05)}
+#modal > .panel{border-top:2px solid var(--dt-line2)}
+/* buttons: angular, condensed capitals */
+#screen button,#modal button{font-family:var(--f-cond);font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--dt-text);
+  background:linear-gradient(180deg,#1b221e,#111613);border:1px solid var(--dt-line2);border-radius:0;
+  clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px);padding:8px 16px;transition:color .15s,background .15s,box-shadow .15s}
+#screen button:hover:not(:disabled),#modal button:hover:not(:disabled){color:var(--dt-amber);background:linear-gradient(180deg,#25301f,#151c16);border-color:var(--dt-amber)}
+#screen button.primary,#modal button.primary{background:linear-gradient(180deg,#6e1a16,#3c0b0a);border-color:#b8573e;color:#f6dfa8;text-shadow:0 0 8px rgba(224,176,82,.35)}
+#screen button.primary:hover:not(:disabled),#modal button.primary:hover:not(:disabled){background:linear-gradient(180deg,#8a2219,#4a0e0c);color:#fff2c8}
+#screen button.danger,#modal button.danger{background:linear-gradient(180deg,#2a0d0d,#160707);border-color:#7d2a2a;color:#e09a8a}
+#screen button:disabled,#modal button:disabled{opacity:.35}
+#screen .qbtn,#modal .qbtn{font-size:13px;padding:6px 12px}
+/* cards: dark dataslates; selection shows as an amber edge */
+#screen .card,#modal .card{font-family:var(--f-cond);font-size:15px;text-transform:none;letter-spacing:.01em;background:linear-gradient(180deg,rgba(22,28,24,.85),rgba(10,13,11,.9));border:1px solid var(--dt-line);border-radius:0;clip-path:none}
+#screen .card:hover,#modal .card:hover{border-color:var(--dt-line2);background:linear-gradient(180deg,rgba(30,38,32,.9),rgba(12,16,13,.92))}
+#screen .card.sel,#modal .card.sel{border-color:var(--dt-amber);box-shadow:inset 3px 0 0 var(--dt-amber),0 0 14px rgba(224,176,82,.12)}
+#screen .tag,#modal .tag{font-family:var(--f-mono);border-radius:0;border-color:var(--dt-line2);color:var(--dt-dim);letter-spacing:.1em}
+#screen .stat,#modal .stat{font-family:var(--f-mono);font-size:13px;letter-spacing:.06em;color:var(--dt-dim);text-transform:uppercase}
+#screen .stat b,#modal .stat b{font-family:var(--f-cond);font-size:19px;color:var(--dt-amber);letter-spacing:.02em}
+#screen .kbd,#modal .kbd{font-family:var(--f-mono)}
+#screen input:not([type=checkbox]):not([type=range]),#modal input:not([type=checkbox]):not([type=range]){font-family:var(--f-mono);background:#070908;color:var(--dt-term);border:1px solid var(--dt-line2);border-radius:0;padding:6px 8px;letter-spacing:.08em}
+#screen input:focus,#modal input:focus{outline:1px solid var(--dt-amber)}
+#screen ul.list li::marker,#modal ul.list li::marker{color:var(--dt-brass)}
+/* the War Council's trees in the same style */
+#modal .tree{border-radius:0;background:linear-gradient(180deg,color-mix(in srgb,var(--tc) 8%,transparent),transparent 140px),rgba(8,11,9,.5)}
+#modal .tal{text-transform:none;letter-spacing:.01em;font-weight:500;border-radius:0;clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px);font-family:var(--f-cond);letter-spacing:.02em}
+#modal .tal-nm{font-size:12px;line-height:1.1}
+#modal .tal-c,#modal .tal-rk,#modal .tera{font-family:var(--f-mono)}
+#modal .tal canvas{border-radius:0}
+.thought{font-family:var(--f-mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--dt-term);border-top:1px solid var(--dt-line);border-bottom:1px solid var(--dt-line);padding:8px 0;opacity:.85}
+.thought b{color:var(--dt-amber);font-weight:400}
+#mapwrap{border:1px solid var(--dt-line);background:rgba(6,8,7,.65)}
 </style>
 <div id="app">
   <canvas id="cv"></canvas>
@@ -546,7 +614,15 @@ RESEARCH.forEach(r => {
 // upgraded entry costs 250% in total. Rank 2 is worth 1.5x the listed effect and rank 3 2x; tower research
 // additionally gives that tower +10% / +20% damage, attack speed and range (or output).
 const RES_RANK_COST = [1, 0.5, 1];
+// what the +10% / +20% rank bonus actually improves for each kind of structure (see tStats in sim.js)
+const RES_BONUS_TEXT = {
+  reliquary: "blessing radius and strength", tarpit: "tar radius, slow and how long the tar clings", stasis: "field radius, slow and freeze rate",
+  barricade: "health", brazier: "fire damage and radius", monastery: "unit damage and health", forge: "unit damage and health",
+  titanforge: "titan damage and health", voidyard: "warship damage and fire rate",
+};
+function resBonusText(k) { return RES_BONUS_TEXT[k] || (TOWERS[k].tab === "eco" ? "output" : "damage, attack speed and range"); }
 const RES_CUSTOM = {
+  r_rf_bolt2: ["Bolt Throwers +40% damage and pierce 1 more enemy.", "Bolt Throwers +60% damage and pierce 1 more enemy. Bolt Throwers get +10% damage, attack speed and range.", "Bolt Throwers +80% damage and pierce 2 more enemies. Bolt Throwers get +20% damage, attack speed and range."],
   r_ground: ["The build circle grows by 1 hex ring.", "The build circle grows by 2 hex rings.", "The build circle grows by 3 hex rings."],
   r_reroll: ["+1 blessing reroll per battle.", "+2 blessing rerolls per battle.", "+3 blessing rerolls per battle."],
   r_veins: ["+1 ore vein in every battle.", "+2 ore veins in every battle.", "+3 ore veins in every battle."],
@@ -556,7 +632,8 @@ const RES_CUSTOM = {
 RESEARCH.forEach(r => {
   const scale = k => r.desc.replace(/(\d+(?:\.\d+)?)(%| scrap| Tithe| more)/g, (m, n, u) => (Math.round(+n * k * 100) / 100) + u);
   const tw = r.tower || r.refit, twName = tw ? TOWERS[tw].name : "", eco = tw && TOWERS[tw].tab === "eco";
-  const extra = pct => tw ? " " + twName + "s get +" + pct + "% " + (eco ? "output" : "damage, attack speed and range") + "." : "";
+  const plural = n => /y$/.test(n) ? n.slice(0, -1) + "ies" : n + "s";
+  const extra = pct => tw ? " " + plural(twName) + " get +" + pct + "% " + resBonusText(tw) + "." : "";
   r.ranks = RES_CUSTOM[r.id] || [r.desc, (r.tower ? r.desc : scale(1.5)) + extra(10), (r.tower ? r.desc : scale(2)) + extra(20)];
   r.rankCost = RES_RANK_COST.map(f => Math.round(r.cost * f / 5) * 5);
 });
@@ -762,7 +839,7 @@ for (let i = PERKS.length - 1; i >= 0; i--) if (GUN_ONLY.perks.includes(PERKS[i]
 for (let i = RELICS.length - 1; i >= 0; i--) if (GUN_ONLY.relics.includes(RELICS[i].id)) RELICS.splice(i, 1);
 for (let i = LEGACY.length - 1; i >= 0; i--) if (LEGACY[i].id.startsWith("u_")) LEGACY.splice(i, 1);
 // starting scrap that used to be "paid" for by the citadel gun, split between the commanders
-const START_BONUS = 300;
+const START_BONUS = 300, START_TITHE = 300; // split evenly between commanders in co-op
 /* ============================================================
    Persistence, run state, and battle simulation
    ============================================================ */
@@ -885,7 +962,7 @@ function genMap() {
 
 function newRun(core, diff, start, coopCores) {
   RUN = {
-    v: 1, core, diff, start: start || "bolt", col: -1, idx: -1, map: genMap(), tithe: 175 + 90 * rank("l_tithe"), carry: 0, holdings: 0, wrath: 0,
+    v: 1, core, diff, start: start || "bolt", col: -1, idx: -1, map: genMap(), tithe: 175 + START_TITHE + 90 * rank("l_tithe"), carry: 0, holdings: 0, wrath: 0,
     research: {}, relics: [], xp: 0, level: 1, skillPts: 1, skills: {}, hpFrac: 1, bosses: 0, battles: 0, kills: 0, path: [],
   };
   if (rank("l_relic")) RUN.relics.push(pick(RELICS).id);
@@ -1245,7 +1322,7 @@ function refreshTowerHP(t) {
   const d = TOWERS[t.type];
   const frac = t.maxhp ? t.hp / t.maxhp : 1;
   let mx = d.hp * (1 + 0.5 * (Math.min(3, t.level) - 1)) * (1 + 0.3 * Math.max(0, t.level - 3)) * B.mods.towerHP * (1 + 0.3 * B.era) * (1 + 0.25 * ((t.ups && t.ups.hp) || 0));
-  if (t.type === "barricade") { if (B.mods && B.mods.sanctuary) mx *= 1 + 0.6 * B.mods.sanctuary; mx *= rkm("r_walls", 1.6) * rkm("r_rf_walls", 1.5); if (t.level >= 3 && t.branch === 0) mx *= 2.5; }
+  if (t.type === "barricade") { if (B.mods && B.mods.sanctuary) mx *= 1 + 0.6 * B.mods.sanctuary; mx *= rkm("r_walls", 1.6) * rkm("r_rf_walls", 1.5) * (1 + towerResBonus("barricade")); if (t.level >= 3 && t.branch === 0) mx *= 2.5; }
   if (t.type === "extractor" && t.level >= 3 && t.branch === 0) mx *= 2;
   t.maxhp = mx; t.hp = Math.min(mx, mx * frac);
 }
@@ -1344,7 +1421,7 @@ function tStats(t) {
     case "bolt":
       s.dmg *= rkm("r_bolt", 1.2); s.range *= rkm("r_bolt", 1.1);
       if (has("r_rf_bolt")) s.splash = 30 * rk("r_rf_bolt");
-      if (has("r_rf_bolt2")) { s.dmg *= rkm("r_rf_bolt2", 1.4); s.pierce += 1; }
+      if (has("r_rf_bolt2")) { s.dmg *= rkm("r_rf_bolt2", 1.4); s.pierce += resRank("r_rf_bolt2") >= 3 ? 2 : 1; }
       if (b === 0) s.rate *= 2;
       if (b === 1) { s.dmg *= 2.4; s.pierce += 3; }
       if (b === 2) s.splash = 45 + 15 * rk("r_rf_bolt");
@@ -1374,7 +1451,7 @@ function tStats(t) {
       if (has("r_rf_flamer")) { s.ap = 99; s.dmg *= rkm("r_rf_flamer", 1.25); }
       break;
     case "arc":
-      s.chains = d.chains + (t.level >= 2 ? 1 : 0) + (b === 0 ? 4 : 0) + 2 * u("chains") + m.chainAdd + (has("r_rf_arc") ? 2 : 0);
+      s.chains = d.chains + (t.level >= 2 ? 1 : 0) + (b === 0 ? 4 : 0) + 2 * u("chains") + m.chainAdd + Math.round(2 * rk("r_rf_arc")); // 2 / 3 / 4 extra chains by rank
       s.dmg *= rkm("r_rf_arc", 1.25);
       s.overload = b === 1; s.ionic = b === 2;
       break;
@@ -1470,6 +1547,7 @@ function tStats(t) {
     s.dmg *= f; s.rate *= f; s.range *= f;
     if (s.yield) s.yield *= f; if (s.tithe) s.tithe = Math.round(s.tithe * f); if (s.bonus) s.bonus *= f; if (s.cap) s.cap = Math.round(s.cap * f); if (s.pct) s.pct *= f;
     if (s.rateB) s.rateB *= f; if (s.dmgB) s.dmgB *= f; if (s.slow) s.slow = Math.min(0.88, s.slow + rb * 0.3); if (s.uhp) s.uhp *= f; if (s.splash) s.splash *= 1 + rb * 0.5;
+    if (s.tar) s.tar *= f; if (s.every) s.every /= f; // tar pits burn harder, stasis fields freeze more often
   }
   const v = vetMult(t);
   if (v > 1) {
@@ -4595,6 +4673,7 @@ function render() {
 
   // ===== fog of war =====
   drawFog(g, time);
+  if (NET.on && NET.drawCursors) NET.drawCursors(g); // other players' pointers (online)
   // ===== warships in low orbit =====
   for (const u of B.units) if (u.ship && !u.dead) drawShip(g, u, time);
   // ===== atmosphere and grade =====
@@ -5197,6 +5276,17 @@ const IN = {
   reroll() { if (NET.on) return NET.cmd("reroll", []); if (B.rerolls > 0) { B.rerolls--; B.picks = rollPerks(); } },
 };
 
+/* ---------------- Thought for the Day (menu flavour, original lines) ---------------- */
+const THOUGHTS = [
+  "A full magazine is a prayer already answered.", "The wall does not ask why. It only holds.", "Hope is a luxury; ammunition is a duty.",
+  "Every ruin was once a fortress that hesitated.", "Count the dead after the battle. Count the shells before it.", "The fog hides the enemy. It does not hide your guilt.",
+  "Tithe today, survive tomorrow.", "A quiet sky is a lie told by the enemy.", "Rust is heresy of the slow kind.",
+  "The spire stands because the faithful kneel beneath it.", "Doubt is a breach. Seal it.", "Mercy is a weapon with no ammunition.",
+  "Let the machine spirit be fed and the guns will sing.", "Sleep in your armour; wake in your grave if you must.", "No ground is consecrated until it is defended.",
+  "An empty Auspex is a blind saint.", "The ledger remembers every coin and every coward.", "Build in haste, mourn at leisure.",
+];
+const thought = () => `<div class="thought">+++ Thought for the day: <b>${THOUGHTS[Math.floor(Math.random() * THOUGHTS.length)]}</b> +++</div>`;
+
 /* ---------------- Screens ---------------- */
 const UI = {
   setup: { core: "bastion", diff: "crusader", start: "bolt", n: 1, cores: ["bastion", "bastion", "bastion", "bastion"] },
@@ -5217,7 +5307,7 @@ const UI = {
   show(html) {
     const sc = $("screen"); sc.hidden = false; $("hud").hidden = true; sc.innerHTML = html; sc.scrollTop = 0;
     const era = RUN ? eraOf(RUN.col + 1) : 0, img = menuBG(era);
-    sc.style.backgroundImage = img ? `radial-gradient(ellipse at 50% 0%, rgba(42,29,23,.55) 0%, rgba(15,12,11,.9) 70%), url(${img})` : "";
+    sc.style.backgroundImage = img ? `radial-gradient(ellipse at 50% -10%, rgba(60,72,58,.35) 0%, transparent 55%), linear-gradient(180deg, rgba(8,12,10,.80), rgba(4,6,5,.95)), url(${img})` : "";
     sc.style.backgroundSize = "cover"; sc.style.backgroundPosition = "center"; sc.style.backgroundAttachment = "fixed";
   },
   closeModal() { $("modal").hidden = true; $("modal").innerHTML = ""; $("mtip").hidden = true; },
@@ -5240,6 +5330,7 @@ const UI = {
     const legacy = LEGACY.map(l => { const r = rank(l.id), max = r >= l.max; return `<button class="card ${max ? "sel" : ""}" data-leg="${l.id}" ${max || META.legacy < l.cost ? "disabled" : ""}><span class="spread"><h3>${l.name}</h3><span class="tag">${r}/${l.max}</span></span><span class="small">${l.desc}</span><span class="small">${max ? "Complete" : "Cost " + l.cost + " Legacy"}</span></button>`; }).join("");
     UI.show(`<div class="wrap">
       <div><div class="eyebrow">A citadel defence across four ages</div><h1 class="title">Ages of the Crown</h1></div>
+      ${thought()}
       <p>The God-Crown's last citadel stands alone. Raise towers around it, and march a campaign through the Ages of Iron, Powder, Brass and the Void. Every wave you survive earns a blessing. Every tyrant you kill moves history forward.</p>
       ${RUN ? `<div class="panel spread"><div><h3>Campaign in progress</h3><span class="small">${RUN.coop ? RUN.coop.length + " commanders" : "Solo"} · ${TOWERS[startTower()].name} · ${DIFFS[RUN.diff].name} · ${ERAS[eraOf(RUN.col + 1)].name} · ${RUN.battles} battles won</span></div><div class="row"><button class="primary" id="b-cont">Continue</button><button class="danger" id="b-abandon">Abandon</button></div></div>` : ""}
       <div class="panel" style="display:flex;flex-direction:column;gap:14px">
@@ -6223,7 +6314,7 @@ function hostConn(conn) {
     if (!NET.conns.includes(conn)) return;
     NET.conns = NET.conns.filter(c => c !== conn);
     const pl = NET.players[conn.slot]; if (!pl || pl.conn !== conn) return;
-    pl.on = false; pl.conn = null;
+    pl.on = false; pl.conn = null; delete NET.cursors[conn.slot];
     if (!(RUN && RUN.online)) NET.players.splice(conn.slot, 1), NET.conns.forEach(c => { if (c.slot > conn.slot) { c.slot--; send(c, { k: "welcome", slot: c.slot, ranks: NET.ranks, code: NET.code }); } });
     else if (B) { NET.queue.push([conn.slot, "fire", [false]]); if (B.state === "pick" && !B.picked[conn.slot]) NET.queue.push([conn.slot, "perk", [B.pickN[conn.slot][0].id]]); }
     showBanner((pl.name || "A commander") + " left", RUN && RUN.online ? "Their gun keeps firing on its own" : "");
@@ -6260,6 +6351,7 @@ function hostRecv(conn, m) {
     return;
   }
   const slot = conn.slot; if (slot == null) return;
+  if (m.k === "cur") { const out = Object.assign({}, m, { s: slot }); gotCursor(slot, out); const parts = pack(out); for (const c of NET.conns) if (c !== conn) rawSend(c, parts); return; }
   if (m.k === "core" && !(RUN && RUN.online) && CORES[m.core]) { NET.players[slot].core = m.core; bcastLobby(); }
   else if (m.k === "cmd" && typeof m.f === "string" && Array.isArray(m.a)) { if (B) NET.queue.push([slot, m.f, m.a]); }
   else if (m.k === "act" && RUN && RUN_ACTS[m.f] && Array.isArray(m.a)) {
@@ -6328,13 +6420,14 @@ function clientRecv(m) {
       break;
     }
     case "snap": applySnap(m); break;
+    case "cur": gotCursor(m.s, m); break;
     case "end": if (B) { B = null; } RUN = null; UI.closeModal(); UI.title(); showBanner("The host ended the campaign"); stopLoops(); break;
   }
 }
 function netReset() {
   try { if (NET.conn) NET.conn.close(); } catch (e) {}
   try { if (NET.peer) NET.peer.destroy(); } catch (e) {}
-  Object.assign(NET, { on: false, host: false, client: false, me: 0, peer: null, conn: null, conns: [], players: [], queue: [], inq: [], out: null, expect: {}, lobbyState: null, code: "", awaitSnap: false });
+  Object.assign(NET, { on: false, host: false, client: false, me: 0, peer: null, conn: null, conns: [], players: [], queue: [], inq: [], out: null, expect: {}, lobbyState: null, code: "", awaitSnap: false, cursors: {} });
 }
 NET.leave = () => { const wasClient = NET.client; netReset(); B = null; if (wasClient) { RUN = load("aotc_run"); coopInstall(); } UI.closeModal(); UI.title(); stopLoops(); };
 
@@ -6398,6 +6491,7 @@ UI.title = function () {
   }
   UI.show(`<div class="wrap">
     <div><div class="eyebrow">Online co-op · up to 4 commanders</div><h1 class="title">Ages of the Crown</h1></div>
+    ${thought()}
     ${body}
     <div class="row"><button id="b-how">How to play</button><button id="b-set">Settings</button></div>
     <div class="panel" style="display:flex;flex-direction:column;gap:14px">
@@ -6431,4 +6525,77 @@ UI.title = function () {
 UI.howtoOnline = true;
 if (new URLSearchParams(location.search).get("join")) netStatus("You've been invited. Enter your name and press Join.");
 UI.title();
+
+/* ---------- everyone's cursors ----------
+   Each player sends where they point ~14 times a second; the host relays it. In battle the cursor is a
+   world position; on the War Table, War Council and lobby it is pinned to the element under it (a map node,
+   a research tile, a button) so it lands on the same thing on screens of any size. */
+NET.cursors = {};
+let curLast = 0, curPending = null;
+function cursorPayload(cx, cy) {
+  if (B && !$("hud").hidden) return { v: "battle", x: Math.round(mouseW.x), y: Math.round(mouseW.y) };
+  const el = document.elementFromPoint(cx, cy), p = { v: NET.view || "lobby", nx: +(cx / innerWidth).toFixed(4), ny: +(cy / innerHeight).toFixed(4) };
+  const a = el && el.closest && el.closest("[data-r], .node, [data-cmd], [data-p], [data-rel], [data-leg], [data-ndiff], [data-nstart], button[id], .tree-h");
+  if (a) {
+    let key = null;
+    if (a.dataset.r) key = '[data-r="' + a.dataset.r + '"]';
+    else if (a.classList.contains("node")) key = '.node[data-c="' + a.dataset.c + '"][data-i="' + a.dataset.i + '"]';
+    else for (const k of ["cmd", "p", "rel", "leg", "ndiff", "nstart"]) if (a.dataset[k] != null) { key = "[data-" + k + '="' + a.dataset[k] + '"]'; break; }
+    if (!key && a.id) key = "#" + a.id;
+    if (key) { const r = a.getBoundingClientRect(); p.a = key; p.fx = +((cx - r.left) / Math.max(1, r.width)).toFixed(3); p.fy = +((cy - r.top) / Math.max(1, r.height)).toFixed(3); }
+  }
+  return p;
+}
+function sendCursor(p) {
+  if (!NET.on) return;
+  if (NET.host) bcast(Object.assign({ k: "cur", s: 0 }, p)); else send(NET.conn, Object.assign({ k: "cur" }, p));
+}
+addEventListener("pointermove", e => {
+  if (!NET.on) return;
+  curPending = [e.clientX, e.clientY];
+  const now = performance.now(); if (now - curLast < 70) return; curLast = now;
+  sendCursor(cursorPayload(e.clientX, e.clientY)); curPending = null;
+}, { passive: true, capture: true });
+// re-send the cursor when the view changes under a still mouse (e.g. the host opens the War Council)
+setInterval(() => { if (NET.on && curPending) { sendCursor(cursorPayload(curPending[0], curPending[1])); curPending = null; } }, 250);
+function gotCursor(slot, m) { if (slot === NET.me) return; NET.cursors[slot] = Object.assign({}, m, { t: performance.now() }); }
+const curName = i => { const L = NET.host ? NET.players : NET.lobbyState && NET.lobbyState.players; return (L && L[i] && L[i].name) || (RUN && RUN.coop && RUN.coop[i] && RUN.coop[i].name) || "Commander " + COOP_NUM[i]; };
+
+// battle: drawn in world space by render() (constant size on screen)
+NET.drawCursors = g => {
+  const now = performance.now();
+  for (const k in NET.cursors) {
+    const c = NET.cursors[k], i = +k; if (c.v !== "battle" || now - c.t > 4000) continue;
+    const sm = c.sm || (c.sm = { x: c.x, y: c.y }); sm.x += (c.x - sm.x) * 0.3; sm.y += (c.y - sm.y) * 0.3;
+    const s = 1 / (VIEW.s || 1), col = COOP_COL[i] || "#fff";
+    g.save(); g.translate(sm.x, sm.y); g.scale(s, s);
+    g.fillStyle = col; g.strokeStyle = "rgba(0,0,0,.85)"; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(0, 0); g.lineTo(0, 18); g.lineTo(5, 13); g.lineTo(9, 21); g.lineTo(12, 19.5); g.lineTo(8, 11.5); g.lineTo(14, 11.5); g.closePath(); g.stroke(); g.fill();
+    g.font = "700 12px Cinzel, Georgia, serif"; g.textAlign = "left"; g.lineWidth = 3; g.strokeText(curName(i), 14, 30); g.fillText(curName(i), 14, 30);
+    g.restore();
+  }
+};
+// menus: a DOM overlay
+function cursorFrame() {
+  requestAnimationFrame(cursorFrame);
+  let box = document.getElementById("net-cursors");
+  if (!NET.on) { if (box) box.innerHTML = ""; return; }
+  if (!box) { box = document.createElement("div"); box.id = "net-cursors"; document.body.appendChild(box); }
+  const now = performance.now(), want = new Set();
+  const menu = !B || $("hud").hidden;
+  for (const k in NET.cursors) {
+    const c = NET.cursors[k], i = +k;
+    if (!menu || c.v === "battle" || c.v !== (NET.view || "lobby") || now - c.t > 4000) continue;
+    let x = c.nx * innerWidth, y = c.ny * innerHeight;
+    if (c.a) { const el = document.querySelector(c.a); if (el) { const r = el.getBoundingClientRect(); if (r.width) { x = r.left + c.fx * r.width; y = r.top + c.fy * r.height; } } }
+    const sm = c.dsm || (c.dsm = { x, y }); sm.x += (x - sm.x) * 0.35; sm.y += (y - sm.y) * 0.35;
+    let el = box.querySelector('[data-cur="' + i + '"]');
+    if (!el) { el = document.createElement("div"); el.className = "netcur"; el.dataset.cur = i; el.style.setProperty("--cc", COOP_COL[i] || "#fff"); el.innerHTML = '<svg width="18" height="24" viewBox="0 0 18 24"><path d="M1 1 L1 19 L6 14 L10 22 L13 20.5 L9 12.5 L15 12.5 Z" fill="currentColor" stroke="#000" stroke-width="1.5"/></svg><span></span>'; box.appendChild(el); }
+    el.querySelector("span").textContent = curName(i);
+    el.style.transform = "translate(" + sm.x.toFixed(1) + "px," + sm.y.toFixed(1) + "px)";
+    want.add(String(i));
+  }
+  for (const el of [...box.children]) if (!want.has(el.dataset.cur)) el.remove();
+}
+requestAnimationFrame(cursorFrame);
 </script></html>
